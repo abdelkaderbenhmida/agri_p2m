@@ -1,0 +1,213 @@
+<div class="min-h-screen bg-gradient-to-b from-white via-green-50/30 to-white overflow-hidden">
+  <!-- Animated Background Elements -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-tr from-accent/5 to-primary/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="relative pt-12 pb-32 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <!-- Left Content -->
+        <div>
+          <div class="mb-6 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white border-none rounded-full inline-flex items-center gap-2">
+            <span class="text-xl">🌱</span>
+            <span class="text-sm font-medium">🇹🇳 Plateforme 100% Tunisienne</span>
+          </div>
+          
+          <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            <span class="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              Du Champ
+            </span>
+            <br />
+            <span class="text-gray-900">à Votre Table</span>
+          </h1>
+
+          <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+            Découvrez la première marketplace agricole tunisienne qui connecte directement 
+            les producteurs locaux aux consommateurs. 
+            <span class="text-primary font-semibold">Frais, Local, Authentique.</span>
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button routerLink="/auth/signup" class="text-lg px-8 py-4 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 text-white rounded-xl group transition-all">
+              Commencer Maintenant
+              <span class="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+            <button routerLink="/auth/login" class="text-lg px-8 py-4 border-2 border-gray-300 hover:bg-primary/5 rounded-xl transition-all">
+              Se Connecter
+            </button>
+          </div>
+
+          <div class="mt-8 flex items-center gap-6 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+              <span class="text-primary text-xl">✓</span>
+              <span>Sans frais d'inscription</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-primary text-xl">✓</span>
+              <span>100% sécurisé</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right - Hero Image -->
+        <div class="relative">
+          <!-- Floating Cards -->
+          <div class="absolute -left-8 top-1/4 z-10 animate-bounce" style="animation-duration: 3s;">
+            <div class="backdrop-blur-sm bg-white/90 shadow-xl border-2 border-white rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <span class="text-white text-2xl">🌿</span>
+                </div>
+                <div>
+                  <div class="font-bold text-lg">100%</div>
+                  <div class="text-xs text-gray-600">Bio</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute -right-8 bottom-1/4 z-10 animate-bounce" style="animation-duration: 4s; animation-delay: 1s;">
+            <div class="backdrop-blur-sm bg-white/90 shadow-xl border-2 border-white rounded-2xl p-4">
+              <div class="flex items-center gap-3">
+                <div class="flex -space-x-2">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary border-2 border-white"></div>
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary border-2 border-white"></div>
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary border-2 border-white"></div>
+                </div>
+                <div>
+                  <div class="font-bold">500+</div>
+                  <div class="text-xs text-gray-600">Agriculteurs</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Image -->
+          <div class="relative rounded-3xl overflow-hidden shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800" alt="Fresh produce" class="w-full h-[500px] object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-secondary">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div *ngFor="let stat of stats" class="text-center text-white">
+          <div class="text-4xl mb-3">{{stat.icon}}</div>
+          <div class="text-4xl md:text-5xl font-bold mb-2">{{stat.value}}</div>
+          <div class="text-sm md:text-base opacity-90">{{stat.label}}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-24 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="mb-4 bg-primary/10 text-primary border border-primary/20 rounded-full inline-block px-4 py-2">
+          Pourquoi Nous Choisir
+        </div>
+        <h2 class="text-4xl md:text-5xl font-bold mb-4">
+          Une Expérience <span class="text-primary">Unique</span>
+        </h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          La plateforme qui révolutionne l'agriculture tunisienne
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div *ngFor="let feature of features" class="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/20 rounded-2xl bg-white p-6 text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br {{feature.color}} flex items-center justify-center transform group-hover:scale-110 transition-transform">
+            <span class="text-white text-3xl">{{feature.icon}}</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">{{feature.title}}</h3>
+          <p class="text-gray-600">{{feature.description}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dual CTA Section -->
+  <section class="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50/30">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- For Customers -->
+        <div class="h-full overflow-hidden border-2 border-primary/20 hover:shadow-2xl transition-all rounded-3xl bg-white">
+          <div class="h-48 bg-gradient-to-br from-primary to-secondary relative overflow-hidden flex items-center justify-center">
+            <span class="text-white text-8xl opacity-20">🛍️</span>
+            <span class="absolute text-white text-6xl">👥</span>
+          </div>
+          <div class="p-8">
+            <h3 class="text-2xl font-bold mb-4">Pour les Acheteurs</h3>
+            <p class="text-gray-600 mb-6">
+              Découvrez des produits frais, locaux et de qualité
+            </p>
+            <ul class="space-y-3 mb-8">
+              <li *ngFor="let benefit of customerBenefits" class="flex items-start gap-2">
+                <span class="text-primary text-xl flex-shrink-0">✓</span>
+                <span class="text-sm">{{benefit}}</span>
+              </li>
+            </ul>
+            <button routerLink="/auth/signup" class="w-full bg-primary hover:bg-primary/90 text-white px-6 py-4 rounded-xl text-base font-medium transition-all">
+              Commencer à Acheter →
+            </button>
+          </div>
+        </div>
+
+        <!-- For Farmers -->
+        <div class="h-full overflow-hidden border-2 border-secondary/20 hover:shadow-2xl transition-all rounded-3xl bg-white">
+          <div class="h-48 bg-gradient-to-br from-secondary to-amber-600 relative overflow-hidden flex items-center justify-center">
+            <span class="text-white text-8xl opacity-20">🌾</span>
+            <span class="absolute text-white text-6xl">🌱</span>
+          </div>
+          <div class="p-8">
+            <h3 class="text-2xl font-bold mb-4">Pour les Agriculteurs</h3>
+            <p class="text-gray-600 mb-6">
+              Développez votre activité et vendez en direct
+            </p>
+            <ul class="space-y-3 mb-8">
+              <li *ngFor="let benefit of farmerBenefits" class="flex items-start gap-2">
+                <span class="text-secondary text-xl flex-shrink-0">✓</span>
+                <span class="text-sm">{{benefit}}</span>
+              </li>
+            </ul>
+            <button routerLink="/auth/signup" class="w-full bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-xl text-base font-medium transition-all">
+              Commencer à Vendre →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-primary opacity-95"></div>
+    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1200')] bg-cover bg-center mix-blend-overlay opacity-30"></div>
+    
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+        Prêt à Rejoindre la Révolution Agricole ?
+      </h2>
+      <p class="text-xl text-white/90 mb-8">
+        Plus de 15,000 tunisiens nous font déjà confiance
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button routerLink="/auth/signup" class="text-lg px-8 py-4 bg-white text-primary hover:bg-white/90 shadow-xl rounded-xl font-medium transition-all">
+          Créer un Compte Gratuit →
+        </button>
+        <button routerLink="/auth/login" class="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white/10 rounded-xl font-medium transition-all">
+          J'ai Déjà un Compte
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

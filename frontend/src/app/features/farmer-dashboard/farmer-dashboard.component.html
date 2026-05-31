@@ -1,0 +1,1436 @@
+<div class="flex min-h-screen bg-gray-50">
+  <!-- Sidebar - Design Figma -->
+  <aside class="w-64 bg-green-600 text-white flex-shrink-0 fixed h-full">
+    <!-- Logo -->
+    <div class="p-6 border-b border-green-500">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <span class="text-2xl">🌾</span>
+        </div>
+        <div>
+          <div class="font-bold text-lg">Agri-Manager</div>
+          <div class="text-xs text-green-100">{{ currentUser?.farmerProfile?.farmName || 'Ma Ferme' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="p-4">
+      <button (click)="changeSection('overview')" 
+        [class.bg-green-700]="currentSection === 'overview'"
+        [class.text-white]="currentSection === 'overview'"
+        [class.text-green-50]="currentSection !== 'overview'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors font-medium">
+        <span class="text-lg">📊</span>
+        <span>Vue d'ensemble</span>
+      </button>
+      
+      <button (click)="changeSection('products')"
+        [class.bg-green-700]="currentSection === 'products'"
+        [class.text-white]="currentSection === 'products'"
+        [class.text-green-50]="currentSection !== 'products'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">📦</span>
+        <span>Mes Produits</span>
+      </button>
+      
+      <button (click)="changeSection('orders')"
+        [class.bg-green-700]="currentSection === 'orders'"
+        [class.text-white]="currentSection === 'orders'"
+        [class.text-green-50]="currentSection !== 'orders'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">🛒</span>
+        <span>Commandes</span>
+      </button>
+      
+      <button (click)="changeSection('messages')"
+        [class.bg-green-700]="currentSection === 'messages'"
+        [class.text-white]="currentSection === 'messages'"
+        [class.text-green-50]="currentSection !== 'messages'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors relative">
+        <span class="text-lg">💬</span>
+        <span>Messagerie</span>
+        <span class="absolute right-3 top-3 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
+      </button>
+      
+      <button (click)="changeSection('logistics')"
+        [class.bg-green-700]="currentSection === 'logistics'"
+        [class.text-white]="currentSection === 'logistics'"
+        [class.text-green-50]="currentSection !== 'logistics'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">🚚</span>
+        <span>Logistique</span>
+      </button>
+      
+      <button (click)="changeSection('recruitment')"
+        [class.bg-green-700]="currentSection === 'recruitment'"
+        [class.text-white]="currentSection === 'recruitment'"
+        [class.text-green-50]="currentSection !== 'recruitment'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">👥</span>
+        <span>Recrutement</span>
+      </button>
+      
+      <button (click)="changeSection('payments')"
+        [class.bg-green-700]="currentSection === 'payments'"
+        [class.text-white]="currentSection === 'payments'"
+        [class.text-green-50]="currentSection !== 'payments'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">💰</span>
+        <span>Paiements</span>
+      </button>
+      
+      <button (click)="changeSection('settings')"
+        [class.bg-green-700]="currentSection === 'settings'"
+        [class.text-white]="currentSection === 'settings'"
+        [class.text-green-50]="currentSection !== 'settings'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">⚙️</span>
+        <span>Paramètres</span>
+      </button>
+
+      <button (click)="changeSection('profile')"
+        [class.bg-green-700]="currentSection === 'profile'"
+        [class.text-white]="currentSection === 'profile'"
+        [class.text-green-50]="currentSection !== 'profile'"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg mb-1 hover:text-white transition-colors">
+        <span class="text-lg">👤</span>
+        <span>Mon Profil</span>
+      </button>
+    </nav>
+
+    <!-- User Profile at Bottom -->
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-green-500">
+      <div class="flex items-center gap-3 px-4 py-3 hover:bg-green-700 rounded-lg cursor-pointer">
+        <div class="w-10 h-10 bg-green-700 rounded-full overflow-hidden flex items-center justify-center font-bold">
+          <img *ngIf="currentUser?.profileImage" [src]="currentUser?.profileImage" class="w-full h-full object-cover">
+          <span *ngIf="!currentUser?.profileImage">{{ (currentUser?.firstName?.charAt(0) || 'A') + (currentUser?.lastName?.charAt(0) || 'B') }}</span>
+        </div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+          <div class="text-xs text-green-200">Agriculteur</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 ml-64">
+    
+    <!-- OVERVIEW SECTION -->
+    <div *ngIf="currentSection === 'overview'">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Vue d'ensemble</h1>
+          <p class="text-sm text-gray-500">Bienvenue, {{ currentUser?.firstName }}! Voici un aperçu de votre activité.</p>
+        </div>
+        <div>
+          <button routerLink="/farmer-dashboard/add-product" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <span class="text-lg">➕</span>
+            <span>Ajouter un produit</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-6">
+    <!-- Stats Grid - Design Figma -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <!-- Revenue Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">💵</span>
+          </div>
+          <span class="text-xs text-green-600 font-semibold" *ngIf="stats.totalRevenue > 0">{{ stats.totalRevenue | number:'1.0-0' }} TND</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalRevenue | number:'1.0-0' }} TND</div>
+        <div class="text-sm text-gray-500">Revenus du mois</div>
+      </div>
+
+      <!-- Orders Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📦</span>
+          </div>
+          <span class="text-xs text-green-600 font-semibold" *ngIf="stats.ordersThisMonth > 0">+{{ stats.ordersThisMonth }}</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.ordersThisMonth }}</div>
+        <div class="text-sm text-gray-500">Commandes en cours</div>
+      </div>
+
+      <!-- Products Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">📁</span>
+          </div>
+          <span class="text-xs text-green-600 font-semibold" *ngIf="stats.totalProducts > 0">{{ stats.totalProducts }}</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalProducts }}</div>
+        <div class="text-sm text-gray-500">Produits actifs</div>
+      </div>
+
+      <!-- Messages Card -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">💬</span>
+          </div>
+          <span class="absolute top-3 right-3 text-xs text-blue-600 font-semibold">nouveau</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ unreadMessages }}</div>
+        <div class="text-sm text-gray-500">Messages non lus</div>
+      </div>
+    </div>
+
+    <!-- Stock Alerts - Design Figma -->
+    <div *ngIf="stats.lowStock > 0 || stats.outOfStock > 0" class="mb-8 space-y-3">
+      <div *ngIf="stats.lowStock > 0" class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 flex items-center gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div class="flex-1">
+          <div class="font-semibold text-yellow-900">Stock faible !</div>
+          <div class="text-sm text-yellow-700">{{ stats.lowStock }} produit{{ stats.lowStock > 1 ? 's ont' : ' a' }} un stock faible</div>
+        </div>
+        <button (click)="setFilter('low-stock')" class="text-sm text-yellow-700 hover:text-yellow-900 font-medium">
+          Voir →
+        </button>
+      </div>
+      
+      <div *ngIf="stats.outOfStock > 0" class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-center gap-3">
+        <span class="text-2xl">❌</span>
+        <div class="flex-1">
+          <div class="font-semibold text-red-900">Rupture de stock !</div>
+          <div class="text-sm text-red-700">{{ stats.outOfStock }} produit{{ stats.outOfStock > 1 ? 's sont' : ' est' }} en rupture</div>
+        </div>
+        <button (click)="setFilter('out-stock')" class="text-sm text-red-700 hover:text-red-900 font-medium">
+          Voir →
+        </button>
+      </div>
+    </div>
+
+    <!-- Charts Section - Design Figma -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+      <!-- Sales Chart -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Ventes de la semaine</h3>
+          <p class="text-sm text-gray-500">Évolution de vos ventes quotidiennes</p>
+        </div>
+        <div class="relative h-64">
+          <canvas #salesChart></canvas>
+        </div>
+      </div>
+
+      <!-- Top Products Chart -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Produits les plus vendus</h3>
+          <p class="text-sm text-gray-500">Top 4 de ce mois</p>
+        </div>
+        <div class="relative h-64">
+          <canvas #productsChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders Table - Design Figma -->
+    <div class="bg-white rounded-xl border border-gray-200 mb-8">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Commandes récentes</h3>
+        </div>
+        <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">Voir tout</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">N° Commande</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montant</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Statut</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngFor="let order of recentOrders" class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">#{{ order.id?.substring(18, 24) || 'N/A' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ order.buyerName || 'Client' }}</td>
+              <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ order.totalAmount | number:'1.2-2' }} TND</td>
+              <td class="px-6 py-4 text-sm">
+                <span *ngIf="order.status === 'PENDING'" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                  En attente
+                </span>
+                <span *ngIf="order.status === 'CONFIRMED'" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  Confirmée
+                </span>
+                <span *ngIf="order.status === 'PROCESSING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                  En préparation
+                </span>
+                <span *ngIf="order.status === 'SHIPPED'" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                  Expédiée
+                </span>
+                <span *ngIf="order.status === 'DELIVERED'" class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
+                  Livrée
+                </span>
+                <span *ngIf="order.status === 'CANCELLED'" class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                  Annulée
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ order.createdAt | date:'dd/MM/yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Products Section - Design Figma -->
+    <div class="bg-white rounded-lg shadow border border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Mes Produits</h2>
+            <p class="text-sm text-gray-500 mt-1">Gérez votre catalogue de produits</p>
+          </div>
+          
+          <!-- Filters -->
+          <div class="flex gap-2">
+            <button 
+              (click)="setFilter('all')" 
+              [class]="currentFilter === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Tous ({{ products.length }})
+            </button>
+            <button 
+              (click)="setFilter('low-stock')" 
+              [class]="currentFilter === 'low-stock' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Stock Bas ({{ stats.lowStock }})
+            </button>
+            <button 
+              (click)="setFilter('out-stock')" 
+              [class]="currentFilter === 'out-stock' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Rupture ({{ stats.outOfStock }})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <app-skeleton *ngFor="let i of [1,2,3,4,5,6]" type="card"></app-skeleton>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && filteredProducts.length === 0" class="text-center py-16">
+          <div class="text-6xl mb-4">📭</div>
+          <div class="text-lg font-semibold text-gray-900 mb-2">Aucun produit trouvé</div>
+          <div class="text-gray-500 mb-6">Commencez par ajouter votre premier produit</div>
+          <button routerLink="/farmer-dashboard/add-product" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <span>➕</span>
+            <span>Ajouter un produit</span>
+          </button>
+        </div>
+
+        <!-- Products Grid -->
+        <div *ngIf="!loading && filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div *ngFor="let product of filteredProducts" 
+               class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <!-- Product Image -->
+            <div class="relative h-48 bg-gray-100">
+              <img *ngIf="product.images && product.images.length > 0" 
+                   [src]="product.images[0]" 
+                   [alt]="product.name"
+                   class="w-full h-full object-cover">
+              <div *ngIf="!product.images || product.images.length === 0" 
+                   class="w-full h-full flex items-center justify-center text-6xl">
+                🌾
+              </div>
+              
+              <!-- Stock Badge -->
+              <div class="absolute top-3 right-3">
+                <span *ngIf="product.stock <= 5 && product.stock > 0"
+                      class="px-2 py-1 bg-orange-500 text-white rounded text-xs font-semibold">
+                  Stock faible
+                </span>
+                <span *ngIf="product.stock === 0"
+                      class="px-2 py-1 bg-red-500 text-white rounded text-xs font-semibold">
+                  Rupture
+                </span>
+                <span *ngIf="product.stock > 5"
+                      class="px-2 py-1 bg-green-500 text-white rounded text-xs font-semibold">
+                  En stock
+                </span>
+              </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="p-4">
+              <h3 class="font-bold text-gray-900 mb-2 line-clamp-1">{{ product.name }}</h3>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ product.description }}</p>
+              
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <div class="text-2xl font-bold text-green-600">{{ product.price | number:'1.2-2' }} TND</div>
+                  <div class="text-xs text-gray-500">Stock: {{ product.stock }} {{ product.unit }}</div>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div><!-- Fin OVERVIEW SECTION -->
+
+    <!-- SECTION PRODUCTS -->
+    <div *ngIf="currentSection === 'products'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Mes Produits</h1>
+            <p class="text-sm text-gray-500">Gérez votre catalogue de produits</p>
+          </div>
+          <button routerLink="/farmer-dashboard/add-product" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+            <span class="text-lg">➕</span>
+            <span>Ajouter un produit</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6">
+        <div class="mb-6">
+          <input type="text" placeholder="🔍 Rechercher un produit..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"/>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div *ngFor="let product of products" class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            <div class="relative h-48 bg-gray-100">
+              <img *ngIf="product.images?.length" [src]="product.images[0]" [alt]="product.name" class="w-full h-full object-cover">
+              <div *ngIf="!product.images?.length" class="w-full h-full flex items-center justify-center text-6xl">🌾</div>
+              <span *ngIf="product.stock && product.stock < 10" class="absolute top-3 right-3 px-2 py-1 bg-red-500 text-white rounded text-xs font-semibold">Stock bas</span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-bold text-gray-900 mb-2">{{ product.name }}</h3>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl font-bold text-green-600">{{ product.price | number:'1.2-2' }} TND</span>
+                <span class="text-sm text-gray-500">Stock: {{ product.stock }} {{ product.unit }}</span>
+              </div>
+              <div class="bg-gray-200 rounded-full h-2 mb-3">
+                <div class="bg-green-600 h-2 rounded-full" [style.width.%]="(product.stock / 100) * 100"></div>
+              </div>
+              <div class="flex gap-2">
+                <button (click)="router.navigate(['/farmer-dashboard/edit-product', product.id])" class="flex-1 px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 text-sm font-medium transition-colors">✏️ Modifier</button>
+                <button (click)="deleteProduct(product.id)" class="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 text-sm font-medium transition-colors" title="Supprimer">🗑️</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION ORDERS -->
+    <div *ngIf="currentSection === 'orders'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Gestion des Commandes</h1>
+        <p class="text-sm text-gray-500">Suivez et gérez toutes vos commandes</p>
+      </div>
+      <div class="p-6">
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="border-b border-gray-200 px-4 py-3">
+            <div class="flex gap-2">
+              <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium">Toutes ({{ allOrders.length }})</button>
+              <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">En attente ({{ getPendingOrdersCount() }})</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">N° Commande</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Produits</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montant</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Livraison</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Statut</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let order of allOrders" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">#{{ order.id?.substring(18, 24) || 'N/A' }}</td>
+                  <td class="px-6 py-4">
+                    <div class="font-medium text-gray-900">{{ parseDeliveryNotes(order.deliveryNotes).name || order.buyerName || 'Client' }}</div>
+                    <div class="text-sm text-gray-500">{{ (order.deliveryAddress?.street || order.deliveryAddress?.address || '') }}, {{ order.deliveryAddress?.city || '' }}</div>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ order.items?.length || 1 }} produit(s)</td>
+                  <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ order.totalAmount | number:'1.2-2' }} TND</td>
+                  <td class="px-6 py-4">
+                    <span *ngIf="order.deliveryAddress?.latitude" class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">📍 GPS</span>
+                    <span *ngIf="!order.deliveryAddress?.latitude" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">Livraison</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span *ngIf="order.status === 'PENDING'" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">En attente</span>
+                    <span *ngIf="order.status === 'CONFIRMED'" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Confirmée</span>
+                    <span *ngIf="order.status === 'PREPARING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">En préparation</span>
+                    <span *ngIf="order.status === 'READY'" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Prête</span>
+                    <span *ngIf="order.status === 'PROCESSING'" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">En traitement</span>
+                    <span *ngIf="order.status === 'SHIPPED'" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">Expédiée</span>
+                    <span *ngIf="order.status === 'DELIVERED'" class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">Livrée</span>
+                    <span *ngIf="order.status === 'CANCELLED'" class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Annulée</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <button (click)="viewOrderDetails(order)" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700">Voir détails</button>
+                      <ng-container *ngIf="isDelivering(order)">
+                        <button *ngIf="sharingOrderId !== order.id"
+                          (click)="startLocationShare(order.id!)"
+                          class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors">
+                          📍 Partager
+                        </button>
+                        <button *ngIf="sharingOrderId === order.id"
+                          (click)="stopLocationShare()"
+                          class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-500 text-white rounded text-xs font-medium hover:bg-red-600 transition-colors animate-pulse">
+                          ⏹ Arrêter
+                        </button>
+                      </ng-container>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="allOrders.length === 0">
+                  <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                    <div class="text-4xl mb-2">📦</div>
+                    <div>Aucune commande reçue</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER DETAILS MODAL -->
+    <div *ngIf="selectedOrder" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" (click)="closeOrderDetails()">
+      <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Commande #{{ selectedOrder.id?.substring(18, 24) }}</h2>
+            <p class="text-sm text-gray-500">{{ formatOrderDate(selectedOrder.createdAt) }} à {{ formatOrderTime(selectedOrder.createdAt) }}</p>
+          </div>
+          <button (click)="closeOrderDetails()" class="text-2xl text-gray-400 hover:text-gray-700 leading-none">×</button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Client info -->
+          <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+            <h3 class="font-bold text-gray-900 mb-3">👤 Informations client</h3>
+            <p><span class="font-semibold text-gray-600">Nom :</span> {{ parseDeliveryNotes(selectedOrder.deliveryNotes).name || selectedOrder.buyerName || 'N/A' }}</p>
+            <p><span class="font-semibold text-gray-600">Téléphone :</span> {{ parseDeliveryNotes(selectedOrder.deliveryNotes).phone || 'N/A' }}</p>
+            <p><span class="font-semibold text-gray-600">Email :</span> {{ selectedOrder.buyerEmail || 'N/A' }}</p>
+          </div>
+
+          <!-- Articles -->
+          <div>
+            <h3 class="font-bold text-gray-900 mb-3">🛒 Articles commandés</h3>
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-700">Produit</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-700">Qté</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-700">Prix unit.</th>
+                    <th class="text-right px-4 py-3 font-semibold text-gray-700">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of selectedOrder.items" class="border-t border-gray-200">
+                    <td class="px-4 py-3">{{ item.productName }}</td>
+                    <td class="px-4 py-3 text-center font-semibold">{{ item.quantity }} {{ item.unit }}</td>
+                    <td class="px-4 py-3 text-center">{{ item.price | number:'1.2-2' }} TND</td>
+                    <td class="px-4 py-3 text-right font-semibold text-green-700">{{ (item.quantity * item.price) | number:'1.2-2' }} TND</td>
+                  </tr>
+                </tbody>
+                <tfoot class="bg-gray-50 border-t-2 border-gray-300">
+                  <tr>
+                    <td colspan="3" class="px-4 py-3 text-right font-bold">Total :</td>
+                    <td class="px-4 py-3 text-right font-bold text-green-600 text-lg">{{ selectedOrder.totalAmount | number:'1.2-2' }} TND</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Adresse -->
+          <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+            <h3 class="font-bold text-gray-900 mb-3">📍 Adresse de livraison</h3>
+            <p><span class="font-semibold text-gray-600">Rue :</span> {{ selectedOrder.deliveryAddress?.street || selectedOrder.deliveryAddress?.address || 'N/A' }}</p>
+            <p><span class="font-semibold text-gray-600">Ville :</span> {{ selectedOrder.deliveryAddress?.city || 'N/A' }}</p>
+            <p *ngIf="selectedOrder.deliveryAddress?.zipCode"><span class="font-semibold text-gray-600">Code postal :</span> {{ selectedOrder.deliveryAddress?.zipCode }}</p>
+            <p *ngIf="parseDeliveryNotes(selectedOrder.deliveryNotes).extra" class="text-sm text-gray-600 bg-yellow-50 p-2 rounded border-l-4 border-yellow-400 mt-2">
+              <span class="font-semibold">Notes :</span> {{ parseDeliveryNotes(selectedOrder.deliveryNotes).extra }}
+            </p>
+          </div>
+
+          <!-- Carte GPS -->
+          <div *ngIf="selectedOrder.deliveryAddress?.latitude">
+            <h3 class="font-bold text-gray-900 mb-3">🗺️ Position exacte du client</h3>
+            <div id="order-detail-map" style="height: 280px; border-radius: 12px; border: 2px solid #d1fae5;"></div>
+          </div>
+          <div *ngIf="!selectedOrder.deliveryAddress?.latitude" class="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+            📍 Cette commande n'a pas de coordonnées GPS
+          </div>
+
+          <!-- Statut & Actions -->
+          <div class="border-t border-gray-200 pt-4">
+            <h3 class="font-bold text-gray-900 mb-3">⚡ Actions</h3>
+
+            <!-- PENDING: Accept or Refuse -->
+            <div *ngIf="selectedOrder.status === 'PENDING'" class="space-y-3">
+              <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800">
+                📋 En attente de votre décision. Acceptez ou refusez cette commande.
+              </div>
+              <div class="flex gap-3">
+                <button (click)="acceptOrder(selectedOrder.id)"
+                  class="flex-1 px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm">
+                  ✅ Accepter la commande
+                </button>
+                <button (click)="refuseOrder(selectedOrder.id)"
+                  class="px-5 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold text-sm">
+                  ❌ Refuser
+                </button>
+              </div>
+            </div>
+
+            <!-- CONFIRMED: Advance to PROCESSING -->
+            <div *ngIf="selectedOrder.status === 'CONFIRMED'" class="space-y-3">
+              <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-800">
+                ✅ Commande acceptée. Le client a été informé. Lancez la préparation quand vous êtes prêt.
+              </div>
+              <button (click)="advanceOrderStatus(selectedOrder.id, selectedOrder.status)"
+                class="w-full px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm">
+                📦 Lancer la préparation
+              </button>
+            </div>
+
+            <!-- PROCESSING: Set departure → SHIPPED -->
+            <div *ngIf="selectedOrder.status === 'PROCESSING'" class="space-y-3">
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+                📦 En préparation. Définissez les informations de départ pour expédier la commande.
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-200">
+                <h4 class="font-semibold text-gray-800 text-sm">🚛 Informations d'expédition</h4>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Date et heure de départ *</label>
+                  <input type="datetime-local" [(ngModel)]="departureForm.date"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Lieu de départ *</label>
+                  <input type="text" [(ngModel)]="departureForm.location" placeholder="Ex: Tunis, Sfax, Monastir..."
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Nom du transporteur (optionnel)</label>
+                  <input type="text" [(ngModel)]="departureForm.transporterName" placeholder="Ex: Ahmed Ben Ali"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-400 focus:outline-none">
+                </div>
+                <button (click)="submitDeparture(selectedOrder.id)"
+                  [disabled]="!departureForm.date || !departureForm.location || departureSubmitting"
+                  class="w-full px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  <span *ngIf="!departureSubmitting">🚛 Expédier et notifier le client</span>
+                  <span *ngIf="departureSubmitting">⏳ Envoi...</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- SHIPPED: GPS sharing -->
+            <div *ngIf="selectedOrder.status === 'SHIPPED'" class="space-y-3">
+              <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                <p class="text-sm font-bold text-indigo-800">🚛 Commande en cours de livraison</p>
+                <ng-container *ngIf="selectedOrder.departureLocation">
+                  <p class="text-xs text-indigo-600 mt-1">📍 Depuis : {{ selectedOrder.departureLocation }}</p>
+                </ng-container>
+                <ng-container *ngIf="selectedOrder.transporterName">
+                  <p class="text-xs text-indigo-600">👤 Transporteur : {{ selectedOrder.transporterName }}</p>
+                </ng-container>
+                <p class="text-xs text-indigo-600 mt-1">Partagez votre GPS pour que le client vous suive en temps réel.</p>
+              </div>
+              <button *ngIf="sharingOrderId !== selectedOrder.id"
+                (click)="startLocationShare(selectedOrder.id!)"
+                class="w-full px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm flex items-center justify-center gap-2">
+                📍 Partager ma position GPS en direct
+              </button>
+              <button *ngIf="sharingOrderId === selectedOrder.id"
+                (click)="stopLocationShare()"
+                class="w-full px-5 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 font-bold text-sm animate-pulse">
+                ⏹ Arrêter le partage GPS
+              </button>
+            </div>
+
+            <!-- DELIVERED -->
+            <div *ngIf="selectedOrder.status === 'DELIVERED'" class="text-center py-4">
+              <div class="text-3xl mb-2">✅</div>
+              <p class="font-bold text-green-700">Commande livrée avec succès</p>
+              <div *ngIf="selectedOrder.rating" class="mt-2 text-yellow-500 text-lg">
+                {{ selectedOrder.rating >= 1 ? '★' : '☆' }}{{ selectedOrder.rating >= 2 ? '★' : '☆' }}{{ selectedOrder.rating >= 3 ? '★' : '☆' }}{{ selectedOrder.rating >= 4 ? '★' : '☆' }}{{ selectedOrder.rating >= 5 ? '★' : '☆' }}
+                <p class="text-sm text-gray-500 mt-1">{{ selectedOrder.reviewText }}</p>
+              </div>
+            </div>
+
+            <!-- CANCELLED -->
+            <div *ngIf="selectedOrder.status === 'CANCELLED'" class="text-center py-4">
+              <div class="text-3xl mb-2">❌</div>
+              <p class="font-bold text-red-700">Commande annulée</p>
+            </div>
+
+            <div class="mt-4">
+              <button (click)="closeOrderDetails()" class="w-full px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-medium">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION MESSAGES -->
+    <div *ngIf="currentSection === 'messages'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Messagerie</h1>
+        <p class="text-sm text-gray-500">Communiquez avec vos clients</p>
+      </div>
+      <div class="p-6">
+        <div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
+          <div class="text-6xl mb-4">💬</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Messagerie intégrée</h3>
+          <p class="text-gray-600 mb-4">Accédez à vos conversations avec les clients</p>
+          <button routerLink="/messages" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Ouvrir la messagerie</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION LOGISTICS -->
+    <div *ngIf="currentSection === 'logistics'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Offres Logistique</h1>
+            <p class="text-sm text-gray-500">Publiez des offres pour trouver un livreur pour vos produits</p>
+          </div>
+          <button (click)="openCreateOffer()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+            <span>+</span><span>Publier une offre</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6">
+        <!-- Loading -->
+        <div *ngIf="routesLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+          <p class="mt-3 text-gray-500">Chargement...</p>
+        </div>
+        <!-- Stats -->
+        <div *ngIf="!routesLoading" class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ myRoutes.length }}</div>
+            <div class="text-xs text-gray-500 mt-1">Total offres</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-yellow-600">{{ getRoutesCountByStatus(RouteStatus.PLANNED) }}</div>
+            <div class="text-xs text-gray-500 mt-1">En attente de livreur</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-purple-600">{{ getOffersWithApplicants() }}</div>
+            <div class="text-xs text-gray-500 mt-1">Avec candidatures</div>
+          </div>
+        </div>
+        <!-- Offers list -->
+        <div *ngIf="!routesLoading && myRoutes.length > 0" class="space-y-4">
+          <div *ngFor="let route of myRoutes" class="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <h3 class="font-semibold text-gray-900 text-lg">{{ route.destination || 'Destination non precisee' }}</h3>
+                  <span [ngClass]="getRouteStatusClass(route.status)" class="px-2 py-0.5 rounded text-xs font-medium">{{ getRouteStatusLabel(route.status) }}</span>
+                </div>
+                <p *ngIf="route.description" class="text-sm text-gray-600 mb-2">{{ route.description }}</p>
+              </div>
+              <button (click)="deleteOffer(route.id!)" class="text-red-400 hover:text-red-600 p-1 rounded transition-colors ml-2" title="Supprimer">🗑</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div class="bg-gray-50 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Quantite</div>
+                <div class="font-bold text-gray-900">{{ route.quantity || 0 }} {{ route.quantityUnit || 'kg' }}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Date souhaitee</div>
+                <div class="font-bold text-gray-900">{{ route.scheduledDate | date:'d MMM yyyy' }}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Prix propose</div>
+                <div class="font-bold text-green-600">{{ route.transportPrice || 0 }} TND</div>
+              </div>
+              <div class="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                <div class="text-xs text-orange-600 mb-1">Candidatures</div>
+                <div class="font-bold text-orange-600">{{ route.applications?.length || 0 }}</div>
+              </div>
+            </div>
+            <button (click)="viewApplications(route)" class="w-full py-2 px-4 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 text-sm font-medium transition-colors">
+              Voir les candidatures ({{ route.applications?.length || 0 }})
+            </button>
+            <!-- Destination map -->
+            <div *ngIf="route.destinationLat && route.destinationLng" class="mt-3">
+              <app-map-view [lat]="route.destinationLat" [lng]="route.destinationLng" [label]="route.destination" height="160px"></app-map-view>
+            </div>
+          </div>
+        </div>
+        <!-- Empty state -->
+        <div *ngIf="!routesLoading && myRoutes.length === 0" class="bg-white border border-gray-200 rounded-lg text-center py-16">
+          <div class="text-5xl mb-3">Offres</div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Aucune offre publiee</h3>
+          <p class="text-gray-500 mb-5">Publiez une offre pour trouver un livreur pour vos produits agricoles</p>
+          <button (click)="openCreateOffer()" class="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Publier une offre</button>
+        </div>
+      </div>
+
+      <!-- Modal: Creer une offre -->
+      <div *ngIf="showCreateOfferModal" class="fixed inset-0 bg-black/50 z-[1200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Publier une offre de livraison</h2>
+            <button (click)="closeCreateOffer()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Destination *</label>
+              <input [(ngModel)]="offerForm.destination" type="text" placeholder="Ex: Tunis, Sfax, Sousse..."
+                     class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+              <!-- Map destination picker -->
+              <div class="mt-2">
+                <p class="text-xs text-gray-500 mb-1">📍 Ou cliquez sur la carte pour définir la destination exacte :</p>
+                <app-map-picker
+                  [initialLat]="offerForm.destinationLat || undefined"
+                  [initialLng]="offerForm.destinationLng || undefined"
+                  height="220px"
+                  (locationChanged)="onOfferLocationChanged($event)">
+                </app-map-picker>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Quantite *</label>
+                <input [(ngModel)]="offerForm.quantity" type="number" min="0" placeholder="Ex: 500"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Unite</label>
+                <select [(ngModel)]="offerForm.quantityUnit" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+                  <option value="kg">kg</option>
+                  <option value="tonne">tonne</option>
+                  <option value="caisses">caisses</option>
+                  <option value="pieces">pieces</option>
+                  <option value="sacs">sacs</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date souhaitee *</label>
+                <input [(ngModel)]="offerForm.scheduledDate" type="date"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Prix propose (TND)</label>
+                <input [(ngModel)]="offerForm.transportPrice" type="number" min="0" placeholder="Ex: 150"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
+              <textarea [(ngModel)]="offerForm.description" rows="3"
+                        placeholder="Decrivez ce qui doit etre transporte, les conditions, etc."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none resize-none"></textarea>
+            </div>
+          </div>
+          <div class="flex gap-3 px-6 pb-6">
+            <button (click)="closeCreateOffer()" class="flex-1 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">Annuler</button>
+            <button (click)="submitCreateOffer()" [disabled]="savingOffer || !offerForm.destination || !offerForm.scheduledDate"
+                    class="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ savingOffer ? 'Publication...' : 'Publier l offre' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Voir les candidatures -->
+      <div *ngIf="showApplicationsModal && selectedRouteForApplications" class="fixed inset-0 bg-black/50 z-[1200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+          <div class="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900">Candidatures recues</h2>
+              <p class="text-sm text-gray-500">{{ selectedRouteForApplications.destination }} - {{ selectedRouteForApplications.quantity }} {{ selectedRouteForApplications.quantityUnit }}</p>
+            </div>
+            <button (click)="closeApplicationsModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+          </div>
+          <div class="overflow-y-auto flex-1 p-6">
+            <div *ngIf="!selectedRouteForApplications.applications || selectedRouteForApplications.applications.length === 0" class="text-center py-12 text-gray-500">
+              <p>Aucune candidature recue pour le moment.</p>
+            </div>
+            <div *ngIf="selectedRouteForApplications.applications && selectedRouteForApplications.applications.length > 0" class="space-y-4">
+              <div *ngFor="let app of selectedRouteForApplications.applications; let i = index" class="border border-gray-200 rounded-xl p-4">
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <h4 class="font-semibold text-gray-900">{{ app.applicantName }}</h4>
+                    <p class="text-sm text-gray-500">{{ app.applicantEmail }}</p>
+                    <p *ngIf="app.applicantPhone" class="text-sm text-gray-500">Tel: {{ app.applicantPhone }}</p>
+                  </div>
+                  <span [ngClass]="{
+                    'bg-yellow-100 text-yellow-700': app.status === 'PENDING',
+                    'bg-green-100 text-green-700': app.status === 'ACCEPTED',
+                    'bg-red-100 text-red-700': app.status === 'REJECTED'
+                  }" class="px-2 py-0.5 rounded text-xs font-medium">
+                    {{ app.status === 'PENDING' ? 'En attente' : app.status === 'ACCEPTED' ? 'Accepte' : 'Rejete' }}
+                  </span>
+                </div>
+                <div *ngIf="app.vehicleType || app.licenseNumber" class="text-sm text-gray-600 mb-2">
+                  <span *ngIf="app.vehicleType">Vehicule: {{ app.vehicleType }} </span>
+                  <span *ngIf="app.licenseNumber">Immatriculation: {{ app.licenseNumber }}</span>
+                </div>
+                <p *ngIf="app.message" class="text-sm text-gray-700 bg-gray-50 rounded p-2 mb-2">{{ app.message }}</p>
+                <div *ngIf="app.status === 'PENDING'" class="flex gap-2 mt-2">
+                  <button (click)="acceptApplication(selectedRouteForApplications, i)" [disabled]="updatingAppIndex === i"
+                          class="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50">Accepter</button>
+                  <button (click)="rejectApplication(selectedRouteForApplications, i)" [disabled]="updatingAppIndex === i"
+                          class="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 text-sm font-medium disabled:opacity-50">Rejeter</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION RECRUITMENT -->
+    <div *ngIf="currentSection === 'recruitment'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Recrutement</h1>
+            <p class="text-sm text-gray-500">Trouvez des travailleurs pour votre ferme</p>
+          </div>
+          <button (click)="navigateToCreateJob()"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+            <span>➕</span><span>Publier une offre</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6">
+
+        <!-- Loading -->
+        <div *ngIf="jobsLoading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+          <p class="mt-3 text-gray-500">Chargement...</p>
+        </div>
+
+        <!-- Stats -->
+        <div *ngIf="!jobsLoading" class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-gray-900">{{ myJobOffers.length }}</div>
+            <div class="text-xs text-gray-500 mt-1">Offres publiées</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-green-600">{{ getActiveJobsCount() }}</div>
+            <div class="text-xs text-gray-500 mt-1">Offres actives</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ getTotalApplications() }}</div>
+            <div class="text-xs text-gray-500 mt-1">Candidatures reçues</div>
+          </div>
+        </div>
+
+        <!-- Job offers list -->
+        <div *ngIf="!jobsLoading && myJobOffers.length > 0" class="space-y-4">
+          <div *ngFor="let job of myJobOffers" class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  <h3 class="text-lg font-semibold text-gray-900">{{ job.title }}</h3>
+                  <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">
+                    {{ getContractLabel(job.contractType) }}
+                  </span>
+                  <span [ngClass]="getJobStatusClass(job.status)" class="px-2 py-0.5 rounded text-xs font-medium">
+                    {{ getJobStatusLabel(job.status) }}
+                  </span>
+                </div>
+                <p class="text-gray-500 text-sm mb-3 line-clamp-2">{{ job.description }}</p>
+                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <span>📍 {{ job.location }}</span>
+                  <span *ngIf="job.salaryMin || job.salaryMax">
+                    💰 {{ job.salaryMin || '?' }}–{{ job.salaryMax || '?' }} TND/mois
+                  </span>
+                  <span>👥 {{ job.applications?.length || 0 }} candidature(s)</span>
+                  <span>📅 Expire: {{ job.applicationDeadline | date:'d MMM yyyy' }}</span>
+                </div>
+              </div>
+              <div class="flex gap-2 ml-4 shrink-0">
+                <button (click)="navigateToEditJob(job.id!)"
+                        class="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="Modifier">✏️</button>
+                <button (click)="deleteJobOffer(job.id!)"
+                        class="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Supprimer">🗑️</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!jobsLoading && myJobOffers.length === 0" class="bg-white border border-gray-200 rounded-lg text-center py-16">
+          <div class="text-5xl mb-3">📋</div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Aucune offre publiée</h3>
+          <p class="text-gray-500 mb-5">Commencez par publier votre première offre d'emploi</p>
+          <button (click)="navigateToCreateJob()"
+                  class="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+            ➕ Publier une offre
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION PAYMENTS -->
+    <div *ngIf="currentSection === 'payments'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Paiements & Revenus</h1>
+        <p class="text-sm text-gray-500">Suivez vos revenus et transactions</p>
+      </div>
+      <div class="p-6">
+        <div class="grid md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="text-sm text-gray-500 mb-2">Revenus du mois</div>
+            <div class="text-3xl font-bold text-green-600 mb-1">{{ getMonthlyRevenue() | number:'1.0-2' }} TND</div>
+            <div class="text-sm text-green-600">{{ allOrders.length }} commande(s) au total</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="text-sm text-gray-500 mb-2">En attente</div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">{{ getPendingRevenue() | number:'1.0-2' }} TND</div>
+            <div class="text-sm text-gray-500">{{ getPendingPaymentsCount() }} paiement(s)</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="text-sm text-gray-500 mb-2">Revenus total</div>
+            <div class="text-3xl font-bold text-blue-600 mb-1">{{ stats.totalRevenue | number:'1.0-2' }} TND</div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900">Historique des transactions</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Commande</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Montant</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Statut</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let order of allOrders | slice:0:10" class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ order.createdAt | date:'d MMM' }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">#{{ order.id?.substring(18, 24) || 'N/A' }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-700">{{ order.buyerName || 'Client' }}</td>
+                  <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ order.totalAmount | number:'1.0-2' }} TND</td>
+                  <td class="px-6 py-4">
+                    <span [ngClass]="order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' : order.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'"
+                          class="px-2 py-1 rounded text-xs font-medium">
+                      {{ order.paymentStatus === 'PAID' ? 'Payé' : order.paymentStatus === 'PENDING' ? 'En attente' : (order.paymentStatus || 'N/A') }}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="allOrders.length === 0">
+                  <td colspan="5" class="px-6 py-8 text-center text-gray-500">Aucune transaction pour le moment</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION SETTINGS -->
+    <div *ngIf="currentSection === 'settings'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Paramètres</h1>
+        <p class="text-sm text-gray-500">Configurez votre espace agriculteur</p>
+      </div>
+      <div class="p-6 space-y-6">
+        
+        <!-- Notifications Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">🔔</span>
+              <span>Notifications</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Nouvelles commandes</div>
+                <div class="text-sm text-gray-500">Recevoir une notification pour chaque nouvelle commande</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Messages clients</div>
+                <div class="text-sm text-gray-500">Être notifié des nouveaux messages</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Promotions et offres</div>
+                <div class="text-sm text-gray-500">Recevoir les offres promotionnelles</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer">
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">🔒</span>
+              <span>Sécurité</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Changer le mot de passe</div>
+                  <div class="text-sm text-gray-500">Dernière modification il y a 30 jours</div>
+                </div>
+                <span class="text-gray-400 group-hover:text-gray-600">→</span>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Authentification à deux facteurs</div>
+                  <div class="text-sm text-gray-500">Ajouter une couche de sécurité supplémentaire</div>
+                </div>
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">Non activée</span>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-gray-50 rounded-lg hover:bg-gray-100 text-left transition-colors group">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-gray-900 mb-1">Sessions actives</div>
+                  <div class="text-sm text-gray-500">Gérer vos appareils connectés</div>
+                </div>
+                <span class="text-gray-400 group-hover:text-gray-600">→</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+              <span class="text-xl">🔐</span>
+              <span>Confidentialité</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Profil public</div>
+                <div class="text-sm text-gray-500">Rendre mon profil visible dans le marketplace</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900">Afficher mes coordonnées</div>
+                <div class="text-sm text-gray-500">Permettre aux clients de me contacter directement</div>
+              </div>
+              <label class="relative inline-block w-12 h-6 cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <span class="absolute inset-0 bg-gray-300 peer-checked:bg-green-600 rounded-full transition-colors"></span>
+                <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-white border border-red-200 rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-red-200 bg-red-50">
+            <h3 class="font-semibold text-red-900 flex items-center gap-2">
+              <span class="text-xl">⚠️</span>
+              <span>Zone dangereuse</span>
+            </h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <button class="w-full p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 text-left transition-colors group">
+              <div>
+                <div class="font-medium text-red-900 mb-1">Désactiver mon compte</div>
+                <div class="text-sm text-red-700">Désactiver temporairement mon compte agriculteur</div>
+              </div>
+            </button>
+            
+            <button class="w-full p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 text-left transition-colors group">
+              <div>
+                <div class="font-medium text-red-900 mb-1">Supprimer mon compte</div>
+                <div class="text-sm text-red-700">Supprimer définitivement toutes mes données</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION PROFILE (LA PLUS IMPORTANTE) -->
+    <div *ngIf="currentSection === 'profile'">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h1 class="text-2xl font-bold text-gray-900">Mon Profil</h1>
+        <p class="text-sm text-gray-500">Gérez les informations de votre ferme</p>
+      </div>
+      <div class="p-6 space-y-6">
+        <!-- Farm Banner -->
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div class="h-40 relative bg-gradient-to-r from-green-600 to-green-700">
+            <div class="absolute inset-0 bg-cover bg-center" [style.backgroundImage]="getBannerStyle()"></div>
+            <input type="file" id="bannerInput" accept="image/*" class="hidden" (change)="onBannerChange($event)">
+            <button (click)="triggerBannerUpload()" [disabled]="savingBanner"
+                    class="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm rounded-lg border border-white/30 backdrop-blur-sm">
+              <span>📷</span>
+              <span>{{ savingBanner ? 'Enregistrement...' : 'Changer la bannière' }}</span>
+            </button>
+          </div>
+          <div class="p-6">
+            <div class="flex flex-col sm:flex-row gap-4 -mt-16 relative pb-4">
+              <div class="relative w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
+                <img *ngIf="currentUser?.profileImage" [src]="currentUser!.profileImage" alt="Photo" class="w-full h-full object-cover">
+                <span *ngIf="!currentUser?.profileImage" class="text-4xl text-green-600 font-bold">{{ (currentUser?.firstName?.charAt(0) || 'A') + (currentUser?.lastName?.charAt(0) || 'B') }}</span>
+                <input type="file" id="photoInput" accept="image/*" class="hidden" (change)="onProfilePhotoChange($event)">
+                <button (click)="triggerPhotoUpload()" [disabled]="savingPhoto"
+                        class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white shadow">
+                  <span class="text-sm">{{ savingPhoto ? '⏳' : '📷' }}</span>
+                </button>
+              </div>
+              <div class="sm:mt-12 flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h2 class="text-xl font-bold text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h2>
+                  <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Agriculteur vérifié ✓</span>
+                </div>
+                <p class="text-gray-500 text-sm">{{ currentUser?.farmerProfile?.farmName || 'Ma Ferme' }} · {{ currentUser?.address?.city || 'Tunisie' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Forms -->
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- Personal Information -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="font-semibold text-gray-900">Informations personnelles</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">👤</span>
+                  <span>Nom complet</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">📧</span>
+                  <span>Email</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.email }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">📱</span>
+                  <span>Téléphone</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.phone || 'Non renseigné' }}</div>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <span class="text-lg">📍</span>
+                  <span>Localisation</span>
+                </label>
+                <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.address?.city || 'Non renseigné' }}, {{ currentUser?.address?.state || '' }}</div>
+              </div>
+              <button routerLink="/profile" class="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center justify-center gap-2">
+                <span>✏️</span>
+                <span>Modifier mes informations</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Farm Information -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900">Ma Ferme</h3>
+              <div class="flex gap-2">
+                <button *ngIf="!editingFarm" (click)="toggleFarmEdit()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">✏️ Modifier</button>
+                <button *ngIf="editingFarm" (click)="toggleFarmEdit()" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">Annuler</button>
+                <button *ngIf="editingFarm" (click)="saveFarmInfo()" [disabled]="savingFarm" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:bg-gray-300">{{ savingFarm ? '...' : '💾 Enregistrer' }}</button>
+              </div>
+            </div>
+            <div class="p-6 space-y-4">
+              <!-- View mode -->
+              <ng-container *ngIf="!editingFarm">
+                <div class="space-y-1.5">
+                  <label class="text-sm text-gray-600">Nom de la ferme</label>
+                  <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.farmerProfile?.farmName || 'Non renseigné' }}</div>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm text-gray-600">Superficie</label>
+                  <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.farmerProfile?.farmSize ? (currentUser?.farmerProfile?.farmSize + ' hectares') : 'Non renseigné' }}</div>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm text-gray-600">Spécialités</label>
+                  <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.farmerProfile?.specialties?.join(', ') || 'Non renseigné' }}</div>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm text-gray-600">Certifications</label>
+                  <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900">{{ currentUser?.farmerProfile?.certifications || 'Non renseigné' }}</div>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm text-gray-600">Description</label>
+                  <div class="px-3 py-2.5 bg-gray-50 rounded-lg text-sm text-gray-900 whitespace-pre-wrap">{{ currentUser?.farmerProfile?.description || 'Non renseigné' }}</div>
+                </div>
+                <!-- Farm location map (view mode) -->
+                <div *ngIf="getFarmLat() && getFarmLng()" class="space-y-1.5">
+                  <label class="text-sm text-gray-600 flex items-center gap-1">📍 Localisation de la ferme</label>
+                  <app-map-view [lat]="getFarmLat()" [lng]="getFarmLng()" [label]="getFarmAddress() || 'Ma ferme'" height="200px"></app-map-view>
+                </div>
+                <div *ngIf="!getFarmLat()" class="flex items-center gap-2 text-sm text-orange-600 bg-orange-50 rounded-lg px-3 py-2">
+                  <span>⚠️</span>
+                  <span>Position non définie. Cliquez <strong>Modifier</strong> pour ajouter votre ferme sur la carte.</span>
+                </div>
+              </ng-container>
+              <!-- Edit mode -->
+              <ng-container *ngIf="editingFarm">
+                <div class="space-y-1.5">
+                  <label class="text-sm font-semibold text-gray-700">Nom de la ferme</label>
+                  <input [(ngModel)]="farmForm.farmName" name="farmName" type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm font-semibold text-gray-700">Superficie (hectares)</label>
+                  <input [(ngModel)]="farmForm.farmSize" name="farmSize" type="number" step="0.1" min="0" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm font-semibold text-gray-700">Spécialités (séparées par des virgules)</label>
+                  <input [(ngModel)]="farmForm.specialties" name="specialties" type="text" placeholder="ex: Maraîchage Bio, Agrumes" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm font-semibold text-gray-700">Certifications</label>
+                  <input [(ngModel)]="farmForm.certifications" name="certifications" type="text" placeholder="ex: Bio (Ecocert), GlobalGAP" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-sm font-semibold text-gray-700">Description</label>
+                  <textarea [(ngModel)]="farmForm.description" name="farmDesc" rows="3" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 resize-none"></textarea>
+                </div>
+                <!-- Farm location map picker -->
+                <div class="space-y-1.5">
+                  <label class="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                    📍 Localisation de la ferme
+                    <span class="text-xs font-normal text-gray-500">(cliquez sur la carte pour positionner)</span>
+                  </label>
+                  <app-map-picker
+                    [initialLat]="farmForm.farmLat || undefined"
+                    [initialLng]="farmForm.farmLng || undefined"
+                    height="260px"
+                    (locationChanged)="onFarmLocationChanged($event)">
+                  </app-map-picker>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">⭐</div>
+            <div class="text-xl font-bold text-gray-900">{{ getAverageRating() }}</div>
+            <div class="text-xs text-gray-500">Note moyenne</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">👥</div>
+            <div class="text-xl font-bold text-gray-900">{{ uniqueCustomers }}</div>
+            <div class="text-xs text-gray-500">Clients fidèles</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">💬</div>
+            <div class="text-xl font-bold text-gray-900">{{ getTotalReviews() }}</div>
+            <div class="text-xs text-gray-500">Avis reçus</div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg text-center p-5">
+            <div class="text-2xl mb-1">📅</div>
+            <div class="text-xl font-bold text-gray-900">{{ getMemberSince() }}</div>
+            <div class="text-xs text-gray-500">Membre depuis</div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-white border border-red-200 rounded-lg">
+          <div class="p-6">
+            <h3 class="text-red-700 font-semibold mb-1">Zone de danger</h3>
+            <p class="text-sm text-gray-600 mb-4">Ces actions sont définitives.</p>
+            <div class="flex gap-3">
+              <button (click)="logout()" class="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm font-medium flex items-center gap-2">
+                <span>🚪</span>
+                <span>Se déconnecter</span>
+              </button>
+              <button (click)="deactivateAccount()" class="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm font-medium">
+                Désactiver mon compte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

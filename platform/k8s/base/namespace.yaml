@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agri-dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agri-prod
+  labels:
+    environment: production

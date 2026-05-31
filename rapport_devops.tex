@@ -1,0 +1,409 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=2cm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, fit, backgrounds, decorations.pathreplacing, calc, matrix, trees}
+\usepackage{adjustbox}
+\usepackage{fancyhdr}
+\usepackage{pdflscape}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{float}
+
+% Configuration des couleurs
+\definecolor{primarycolor}{RGB}{43, 110, 63} % Vert agricole
+\definecolor{secondarycolor}{RGB}{95, 158, 114}
+\definecolor{accentcolor}{RGB}{205, 149, 12}
+\definecolor{lightgray}{RGB}{240, 240, 240}
+\definecolor{dockerblue}{RGB}{36, 150, 237}
+\definecolor{k8sblue}{RGB}{50, 108, 229}
+\definecolor{jenkinsred}{RGB}{210, 73, 57}
+\definecolor{jwtcolor}{RGB}{142, 68, 173}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primarycolor,
+    filecolor=magenta,      
+    urlcolor=dockerblue,
+    pdftitle={Rapport DevOps - AgriConnect},
+}
+
+% Configuration En-tête et Pied de page
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{primarycolor}{\textbf{AgriConnect - Rapport Cloud \& Microservices}}}
+\fancyhead[R]{\leftmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+% Page de garde
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge \textbf{\textcolor{primarycolor}{Rapport Global de Projet}} \\}
+    \vspace{1cm}
+    {\LARGE \textbf{Architecture Microservices \& Ingénierie DevOps/Cloud} \\}
+    \vspace{0.5cm}
+    {\Large \textit{Projet : AgriConnect - Marketplace Agricole} \\}
+    
+    \vspace{2cm}
+    
+    \begin{tcolorbox}[colback=primarycolor!10, colframe=primarycolor, width=0.8\textwidth, arc=5mm, auto outer arc, halign=center]
+        \Large \textbf{Fondations Technologiques :} \\
+        \normalsize \textbf{Architecture Modulaire :} 8 Microservices (Backend), API Gateway \\
+        \textbf{DevOps \& Infra :} Docker, Kubernetes (Kustomize), Jenkins \\
+        \textbf{Outils SecOps :} Trivy, SpotBugs, Dependency-Check \\
+        \textbf{Observabilité :} Prometheus, Grafana, OpenTelemetry \\
+        \textbf{Stack Applicative :} Spring Boot 3, Angular 17, MongoDB
+    \end{tcolorbox}
+    
+    \vspace{2.5cm}
+    
+    \begin{figure}[H]
+        \centering
+        % TODO: Remplacez "image_accueil.png" par le nom exact de votre fichier d'image
+        \includegraphics[width=0.8\textwidth]{image_accueil.png}
+    \end{figure}
+    
+    \vfill
+    
+    \begin{flushright}
+        \textbf{Préparé par :} [Votre Nom/Équipe] \\
+        \textbf{Date :} \today
+    \end{flushright}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------
+\section{Introduction au Projet}
+%---------------------------------------------------------
+
+Le projet \textbf{AgriConnect} est une plateforme e-commerce \textit{cloud-native} entièrement conçue et distribuée selon l'architecture en \textbf{Microservices}. Contrairement aux applications monolithiques classiques où tout le code est regroupé dans un seul bloc, AgriConnect a été pensé de manière "décentralisée" pour répondre aux défis des applications modernes du Web hyperscalables.
+
+L'objectif principal du projet est de mettre en relation directe agriculteurs et acheteurs. Pour supporter un trafic élevé, isoler les pannes éventuelles et fluidifier les mises à jour, la plateforme est propulsée par un pipeline automatisé DevOps robuste et conteneurisé. 
+
+Ce rapport est segmenté en deux grandes parties : la compréhension du cœur applicatif en microservices, puis la mécanique DevOps supportant son cycle de vie.
+
+%---------------------------------------------------------
+\section{Le Cœur du Projet : L'Approche Microservices}
+%---------------------------------------------------------
+
+\subsection{Pourquoi utiliser des Microservices ? Explication Simple}
+Le choix de l'architecture microservice est crucial. Elle consiste à diviser l'application en plusieurs **petits programmes indépendants**, où chaque programme (ou service) s'occupe d'une et d'une seule tâche spécifique (ex: Gérer les commandes, Gérer le catalogue). 
+
+\textbf{Avantages concrets sur ce projet :}
+\begin{itemize}
+    \item \textbf{Indépendance en cas de panne :} Si le service de Messagerie tombe en panne, le catalogue et la prise de commandes fonctionnent toujours.
+    \item \textbf{Mise à l'échelle (Scalabilité) :} S'il y a un pic de nouvelles commandes, on peut dédoubler uniquement le \textit{Order Service} sans gaspiller des serveurs entiers.
+    \item \textbf{Autonomie des données :} ("Database-per-service") Chaque service possède sa propre base de données MongoDB.
+\end{itemize}
+
+\subsection{Schéma Complet de l'Architecture Microservices}
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        node distance=1.5cm,
+        ms/.style={rectangle, draw, rounded corners, align=center, thick, minimum width=2.8cm, minimum height=1.2cm, fill=primarycolor!10, draw=primarycolor, font=\footnotesize},
+        db/.style={rectangle, draw, rounded corners, thick, minimum height=1.5cm, minimum width=8cm, fill=accentcolor!20, draw=accentcolor, font=\normalsize},
+        gateway/.style={rectangle, draw, rounded corners, fill=purple!20, draw=purple, thick, align=center, minimum width=14cm, minimum height=1cm, font=\normalsize},
+        backendbox/.style={rectangle, draw, dashed, rounded corners, inner sep=0.5cm, draw=gray!80, fill=gray!5},
+        arrow/.style={->, >=stealth, thick, darkgray},
+        dashedarrow/.style={->, >=stealth, thick, dashed, darkgray}
+        ]
+        
+        % Frontend
+        \node[ms, fill=dockerblue!20, draw=dockerblue, minimum width=6cm] (front) at (0, 2.5) {Frontend (Angular 17) \\ \textit{- Navigateurs Utilisateurs -}};
+        
+        % Gateway
+        \node[gateway] (gateway) at (0, 0) {\textbf{API Gateway} (Port 8080) : Routage HTTP, Autorisations, Websocket};
+        
+        % Services Row 1
+        \node[ms] (auth) at (-5.4, -3) {Auth Service\\ \textit{(Authentification)}};
+        \node[ms] (user) at (-1.8, -3) {User Service\\ \textit{(Gestion Profils)}};
+        \node[ms] (catalog) at (1.8, -3) {Catalog Service\\ \textit{(Produits)}};
+        \node[ms] (order) at (5.4, -3) {Order Service\\ \textit{(Commandes)}};
+        
+        % Services Row 2
+        \node[ms] (payment) at (-5.4, -5) {Payment Service\\ \textit{(Konnect/Stripe)}};
+        \node[ms] (msg) at (-1.8, -5) {Messaging Service\\ \textit{(Chat direct)}};
+        \node[ms] (delivery) at (1.8, -5) {Delivery Service\\ \textit{(Tracking GPS)}};
+        \node[ms] (jobs) at (5.4, -5) {Jobs Service\\ \textit{(Offres d'emploi)}};
+        
+        % Backend Group Box
+        \begin{pgfonlayer}{background}
+            \node[backendbox, fit=(auth) (user) (catalog) (order) (payment) (msg) (delivery) (jobs)] (backend) {};
+        \end{pgfonlayer}
+        \node[below right, font=\footnotesize\bfseries, color=gray] at (backend.north west) {Réseau Kubernetes (Backend Microservices)};
+        
+        % Database (Remplacé cylinder par rectangle pour éviter les bugs géométriques LaTeX)
+        \node[db] (mongo) at (0, -8.5) {Cluster MongoDB (Bases de données logiques multiples)};
+        
+        % Connections
+        \draw[arrow] (front) -- (gateway);
+        
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (auth.north);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (user.north);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (catalog.north);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (order.north);
+        
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (-7.5, -1.5) |- (payment.west);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (-7.5, -1.5) |- (msg.west);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (7.5, -1.5)  |- (delivery.east);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (7.5, -1.5)  |- (jobs.east);
+        
+        \draw[dashedarrow] (backend.south) -- node[right, font=\scriptsize, align=left] {Opérations isolées par collection\\(authdb, userdb, etc.)} (mongo.north);
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Architecture Globale du réseau de Microservices (\textbf{Core Projet})}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_swagger.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_swagger.png}
+    \caption{Capture du Swagger (Documentation de l'API) ou de la plateforme Angular}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Communication Inter-Services (Chorégraphie)}
+%---------------------------------------------------------
+
+Pour éviter d'être rigidement attachés, les 8 services ne partagent pas leur base de données. Quand une action impacte plusieurs services, ils se parlent via l'envoi de signaux HTTP synchrones. 
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        lifeline/.style={thick, dashed, draw=gray},
+        actor/.style={rectangle, draw, rounded corners, fill=white, thick, minimum width=3cm, minimum height=1cm, align=center},
+        arrow/.style={->, >=stealth, thick},
+        return/.style={->, >=stealth, dashed, thick},
+        label/.style={above, font=\footnotesize, fill=white}
+        ]
+        
+        % Actors (Espacement X élargi à 6cm)
+        \node[actor] (client) at (0, 0) {Client API};
+        \node[actor, fill=orange!10] (order) at (6, 0) {Order Service};
+        \node[actor, fill=green!10] (payment) at (12, 0) {Payment Service};
+        \node[actor, fill=blue!10] (delivery) at (18, 0) {Delivery Service};
+        
+        % Lifelines
+        \draw[lifeline] (0, -0.5) -- (0, -8);
+        \draw[lifeline] (6, -0.5) -- (6, -8);
+        \draw[lifeline] (12, -0.5) -- (12, -8);
+        \draw[lifeline] (18, -0.5) -- (18, -8);
+        
+        % Messages (avec fill=white pour écraser les traits en pointillés)
+        \draw[arrow] (0, -1) -- node[label] {1. POST /api/orders} (6, -1);
+        \draw[arrow] (6, -2) -- node[label] {2. Notification inter-service: order-created} (12, -2);
+        \draw[return] (12, -3) -- node[label] {3. 200 OK (Payment initiated)} (6, -3);
+        
+        \draw[arrow] (0, -4.5) -- node[label] {4. Webhook : Paiement Konnect Confirmé} (12, -4.5);
+        
+        \draw[arrow] (12, -5.5) -- node[label] {5. Mise à jour statut (PAID)} (6, -5.5);
+        \draw[arrow] (12, -6.5) -- node[label] {6. POST /delivery/payment-confirmed} (18, -6.5);
+        
+        \node[draw, fill=secondarycolor!20, text width=3cm, align=center, font=\scriptsize, rounded corners] at (19.5,-6.5) {Création automatique \\ tournée logistique};
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Diagramme de Séquence de Communication entre les Microservices}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Stratégie de Sécurité (DevSecOps \& JWT)}
+%---------------------------------------------------------
+
+\subsection{L'Authentification JWT au sein des Microservices}
+Pour éviter de fatiguer l'API Gateway avec la validation en base de données, l'architecture se base sur des jetons signés cryptographiquement. Chaque microservice récupère ce jeton et valide la signature localement. 
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        node distance=0.8cm,
+        box/.style={rectangle, draw, rounded corners, align=center, thick, minimum width=3.5cm, minimum height=1.2cm},
+        arrow/.style={->, >=stealth, thick},
+        label/.style={font=\footnotesize, fill=white, align=center}
+        ]
+        
+        % Mise en page plane pour éviter les chevauchements
+        \node[box, fill=lightgray] (client) at (0, 0) {Client Apps};
+        \node[box, fill=purple!20] (gw) at (8, 0) {API Gateway};
+        \node[box, fill=primarycolor!20] (auth) at (16, 0) {Auth Service};
+        
+        \node[box, fill=secondarycolor!20] (order) at (8, -4.5) {Order Service};
+        
+        % Ligne 1 : Login
+        \draw[arrow] (client.north east) -- node[label, above] {1. POST /login} (gw.north west);
+        \draw[arrow] (gw.north east) -- node[label, above] {2. Route vers Auth} (auth.north west);
+        
+        % Ligne 2 : Retour JWT
+        \draw[arrow, dashed] (auth.south west) -- node[label, below] {3. Renvoi JWT : \{rôle, userId\}} (gw.south east);
+        \draw[arrow, dashed] (gw.south west) -- node[label, below] {4. Relais JWT au Client} (client.south east);
+        
+        % Ligne 3 : Requête authentifiée
+        \draw[arrow] (client.south) |- node[label, near start, left] {5. HTTP GET \\ Header: Bearer <JWT>} (0, -4.5) -- (order.west);
+        % Le proxy API relaye
+        \draw[arrow] (gw.south) -- node[label, right] {Relais invisible} (order.north);
+        
+        \node[draw, align=left, fill=jwtcolor!10, text width=4.5cm, font=\scriptsize, rounded corners] at (16,-4.5) {\textbf{Validation JWT Local :}\\ - Signature vérifiée localement \\ - Expiration vérifiée \\ - Rôle extrait pour autorisation};
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Mécanique plane de l'Authentification Distribuée Zero-Trust}
+\end{figure}
+
+\subsection{Audits Sécurité DevOps continus}
+Le cycle de vie du code n'accepte aucune négligence. Le système intègre des tests statiques à chaque push :
+\begin{itemize}
+    \item \textbf{Trivy :} Scanne les conteneurs Docker Linux pour trouver des virus et failles critiques dans l'O.S.
+    \item \textbf{SpotBugs (SAST) :} Inspecte le code Java compilé pour traquer des bugs de sécurité.
+\end{itemize}
+
+
+%---------------------------------------------------------
+\section{L'Ingénierie DevOps : Le Pipeline CI/CD}
+%---------------------------------------------------------
+
+Pour gérer de front 8 applications différentes sans exploser les temps d'intégration, \textbf{Jenkins} coordonne un pipeline de type **Multibranch as code** fortement parallélisé.
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        stage/.style={rectangle, draw, rounded corners, fill=jenkinsred!20, draw=jenkinsred, thick, align=center, minimum width=3cm, minimum height=1.2cm, font=\footnotesize},
+        arrow/.style={->, >=stealth, thick, darkgray}
+        ]
+        
+        % Espacement X = 4.5cm pour respirer
+        \node[stage] (scm) at (0, 0) {Code SCM (Git)};
+        \node[stage, fill=dockerblue!20, draw=dockerblue] (build) at (4.5, 0) {Parallèle Build \\ (8 Services)};
+        \node[stage, fill=dockerblue!20, draw=dockerblue] (test) at (9, 0) {Tests Auto \\ (Surefire)};
+        \node[stage, fill=dockerblue!20, draw=dockerblue] (docker) at (13.5, 0) {Docker Build \\ Images};
+        
+        \node[stage, fill=orange!20, draw=orange] (sonar) at (13.5, -2.5) {Quality Gate \\ (Coverage)};
+        \node[stage, fill=orange!20, draw=orange] (trivy) at (9, -2.5) {Trivy Scan \\ (Containers)};
+        \node[stage, fill=orange!20, draw=orange] (sast) at (4.5, -2.5) {SpotBugs \\ SecOps Code};
+        
+        \node[stage, fill=k8sblue!20, draw=k8sblue] (push) at (0, -2.5) {Push Registry};
+        
+        \node[stage, fill=k8sblue!20, draw=k8sblue] (deploy) at (0, -5) {\textbf{Deploy Dev}};
+        \node[stage, fill=k8sblue!20, draw=k8sblue, dashed] (manual) at (6.75, -5) {Validation Manuelle};
+        \node[stage, fill=purple!20, draw=purple] (prod) at (13.5, -5) {\textbf{Deploy Prod}};
+        
+        % Connections
+        \draw[arrow] (scm) -- (build);
+        \draw[arrow] (build) -- (test);
+        \draw[arrow] (test) -- (docker);
+        
+        \draw[arrow] (docker) -- (sonar);
+        \draw[arrow] (sonar) -- (trivy);
+        \draw[arrow] (trivy) -- (sast);
+        \draw[arrow] (sast) -- (push);
+        
+        \draw[arrow] (push) -- (deploy);
+        \draw[arrow, dashed] (deploy) -- node[above, font=\footnotesize] {Avant Prod} (manual);
+        \draw[arrow, dashed] (manual) -- (prod);
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Flux CI/CD Automatisé pour le système Multi-services géré par Jenkins}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_jenkins.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_jenkins.png}
+    \caption{Capture de l'exécution du pipeline CI/CD sur Jenkins (Blue Ocean)}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Production et Orchestration Kubernetes (Kustomize)}
+%---------------------------------------------------------
+
+Le projet est entièrement prêt pour une mise en production sur un cluster **Kubernetes** de haute disponibilité. Pour différencier le Dev de la Prod, l'architecture utilise l'outil utilitaire `Kustomize`.
+
+Le dossier `base/` contient les définitions brutes standard des services, l'outil dédouble son mode de lancement pour le dossier `/dev/` en 1 machine et le dossier `/prod/` en 3 machines. 
+
+D'un point de vue isolation, le cluster implémente un "Network Policy : `default-deny-all`". Dès lors, si un pirate rentrait sur le *Order Service*, il ne pourrait physiquement pas accéder au réseau du *Auth Service* (bloqué au niveau du kernel).
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_kubernetes.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_kubernetes.png}
+    \caption{Capture d'écran du terminal (\texttt{kubectl get pods}) ou Dashboard Kubernetes}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Observabilité : Suivi des Performances (Prometheus)}
+%---------------------------------------------------------
+
+\textbf{Actuator \& Prometheus : Modèle Pull} \\
+Chaque application Java prépare des métriques (Temps de réponse, RAM). Le moteur Prometheus passe vérifier ce carnet de route toutes les 15 secondes ("Mécanique de Pull"). Les métriques sont rendues graphiques par Grafana. 
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        node distance=2.5cm,
+        comp/.style={circle, draw, align=center, thick, fill=white, minimum size=3cm},
+        target/.style={rectangle, draw, rounded corners, fill=k8sblue!20, thick, font=\footnotesize, minimum width=3.5cm, minimum height=1cm, align=center},
+        arrow/.style={->, >=stealth, thick},
+        label/.style={font=\scriptsize, fill=white, inner sep=2pt, align=center}
+        ]
+        
+        \node[comp, fill=accentcolor!20] (prom) at (0,0) {Prometheus \\ (Collecteur global)};
+        
+        % On recule considérablement les cibles à X=10cm (plus de chevauchement !)
+        \node[target] (svc1) at (9, 3) {Order-Service (Actuator)};
+        \node[target] (gw)  at (9, 0) {API-Gateway (Actuator)};
+        \node[target] (svc2) at (9, -3) {Auth-Service (Actuator)};
+        
+        \node[comp, fill=lightgray] (graf) at (-8, 0) {Grafana \\ Dashboards visuels};
+        
+        \draw[arrow] (prom) -- node[label, sloped] {Aspiration via /prometheus (15s)} (svc1);
+        \draw[arrow] (prom) -- node[label] {Aspiration via /prometheus (15s)} (gw);
+        \draw[arrow] (prom) -- node[label, sloped] {Aspiration via /prometheus (15s)} (svc2);
+        
+        \draw[arrow] (graf) -- node[label] {Consultation Périodique} (prom);
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Mécanique de l'Observabilité Système Cloud (Mise en page espacée)}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_grafana.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_grafana.png}
+    \caption{Dashboard Grafana montrant les métriques de performances et le suivi des microservices}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Conclusion Générale}
+%---------------------------------------------------------
+Le développement applicatif en microservices d'AgriConnect prend tout son sens lorsqu'elle est combinée avec un environnement DevOps irréprochable. Sans Jenkins, Docker et Kubernetes, gérer 8 services en parallèle relèverait de l'impossible. Le fonctionnement fusionnel du découpage orienté fonction, de la distribution en conteneur, de la sécurité omniprésente (SAST/SCA), de l'observabilité fine de la supervision Prometheus permet un lancement d'infrastructure e-commerce agricole fiable, stable, et hautement disponible et qui passera sereinement à l'échelle pour tout le marché ciblé.
+
+\end{document}

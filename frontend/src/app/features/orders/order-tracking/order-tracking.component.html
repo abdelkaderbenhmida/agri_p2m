@@ -1,0 +1,762 @@
+﻿<!-- ═══════════════════════════════════════════
+     MES COMMANDES — Client View
+══════════════════════════════════════════════ -->
+<div class="min-h-screen" style="background:#f8faf8;">
+
+  <!-- ── TOP HEADER ─────────────────────────── -->
+  <div style="background:linear-gradient(135deg,#14532d 0%,#166534 60%,#15803d 100%);" class="text-white px-4 pt-8 pb-20">
+    <div class="max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight">Mes Commandes</h1>
+          <p class="text-green-200 text-sm mt-0.5">Gerez et suivez vos achats</p>
+        </div>
+        <a routerLink="/marketplace" class="flex items-center gap-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 transition px-3 py-2 rounded-xl">
+          + Commander
+        </a>
+      </div>
+
+      <!-- Stats row -->
+      <div *ngIf="!loading && orders.length > 0" class="grid grid-cols-4 gap-2 mt-5">
+        <div class="bg-white/10 rounded-2xl p-3 text-center">
+          <p class="text-xl font-extrabold">{{ countByFilter('all') }}</p>
+          <p class="text-[11px] text-green-200 mt-0.5">Total</p>
+        </div>
+        <div class="rounded-2xl p-3 text-center relative" [ngClass]="pendingPaymentCount > 0 ? 'bg-amber-400/30 ring-1 ring-amber-300' : 'bg-white/10'">
+          <p class="text-xl font-extrabold">{{ countByFilter('active') }}</p>
+          <p class="text-[11px] text-green-200 mt-0.5">En cours</p>
+          <span *ngIf="pendingPaymentCount > 0" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center font-bold">{{ pendingPaymentCount }}</span>
+        </div>
+        <div class="bg-white/10 rounded-2xl p-3 text-center">
+          <p class="text-xl font-extrabold">{{ countByFilter('shipping') }}</p>
+          <p class="text-[11px] text-green-200 mt-0.5">En route</p>
+        </div>
+        <div class="bg-white/10 rounded-2xl p-3 text-center">
+          <p class="text-xl font-extrabold">{{ countByFilter('delivered') }}</p>
+          <p class="text-[11px] text-green-200 mt-0.5">Livrees</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONTENT (overlaps header by -mt) ──── -->
+  <div class="max-w-2xl mx-auto px-4 -mt-12 pb-10 relative z-10">
+
+    <!-- LOADING -->
+    <div *ngIf="loading" class="space-y-3 pt-2">
+      <div *ngFor="let i of [1,2,3]" class="bg-white rounded-2xl shadow h-28 animate-pulse"></div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div *ngIf="!loading && orders.length === 0" class="bg-white rounded-3xl shadow-lg p-10 text-center mt-4">
+      <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">📦</div>
+      <h3 class="text-lg font-bold text-gray-900 mb-1">Aucune commande</h3>
+      <p class="text-gray-400 text-sm mb-6">Vous n'avez pas encore commande. Decouvrez des produits frais.</p>
+      <a routerLink="/marketplace" class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold text-sm">
+        Decouvrir le marche
+      </a>
+    </div>
+
+    <ng-container *ngIf="!loading && orders.length > 0">
+
+      <!-- FILTER TABS -->
+      <div class="flex gap-2 overflow-x-auto pb-1 mb-4 mt-2 no-scrollbar">
+        <button *ngFor="let tab of [
+          {key:'all',       label:'Toutes'},
+          {key:'active',    label:'En cours'},
+          {key:'shipping',  label:'En route'},
+          {key:'delivered', label:'Livrees'},
+          {key:'cancelled', label:'Annulees'}]"
+          (click)="activeFilter = tab.key"
+          class="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all"
+          [ngClass]="activeFilter === tab.key
+            ? 'bg-green-700 text-white shadow-sm'
+            : 'bg-white text-gray-500 shadow-sm hover:bg-green-50'">
+          {{ tab.label }}
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold"
+                [ngClass]="activeFilter === tab.key ? 'bg-white/30 text-white' : 'bg-gray-100 text-gray-400'">
+            {{ countByFilter(tab.key) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- ── ORDER CARDS ──────────────────────── -->
+      <div class="space-y-3">
+        <ng-container *ngFor="let order of filteredOrders">
+
+          <!-- PAYMENT REQUIRED BANNER (CONFIRMED) -->
+          <div *ngIf="order.status === 'CONFIRMED'"
+               class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 shadow-lg flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/25 rounded-xl flex items-center justify-center text-xl flex-shrink-0">💳</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-extrabold text-white text-sm">Commande acceptee par l'agriculteur !</p>
+              <p class="text-amber-100 text-xs mt-0.5 truncate">#{{ order.id.substring(0,8).toUpperCase() }} — Finalisez votre paiement pour continuer</p>
+            </div>
+            <button (click)="openPayment(order)" class="flex-shrink-0 bg-white text-amber-600 font-extrabold text-xs px-3 py-2 rounded-xl hover:bg-amber-50 transition">
+              Payer
+            </button>
+          </div>
+
+          <!-- CONFIRM RECEIPT BANNER (SHIPPED) -->
+          <div *ngIf="isReadyToConfirm(order)"
+               class="bg-gradient-to-r from-teal-500 to-emerald-600 rounded-2xl p-4 shadow-lg flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/25 rounded-xl flex items-center justify-center text-xl flex-shrink-0">📬</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-extrabold text-white text-sm">Votre colis est en chemin !</p>
+              <p class="text-teal-100 text-xs mt-0.5 truncate">#{{ order.id.substring(0,8).toUpperCase() }} — Confirmez la reception quand vous recevez</p>
+            </div>
+            <button (click)="confirmReceipt(order)" class="flex-shrink-0 bg-white text-teal-600 font-extrabold text-xs px-3 py-2 rounded-xl hover:bg-teal-50 transition">
+              Recu
+            </button>
+          </div>
+
+          <!-- RATE BANNER (DELIVERED, no rating) -->
+          <div *ngIf="isRatable(order)"
+               class="bg-gradient-to-r from-amber-400 to-yellow-500 rounded-2xl p-4 shadow-lg flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/25 rounded-xl flex items-center justify-center text-xl flex-shrink-0">⭐</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-extrabold text-white text-sm">Donnez votre avis !</p>
+              <p class="text-yellow-100 text-xs mt-0.5 truncate">#{{ order.id.substring(0,8).toUpperCase() }} — Votre evaluation aide les autres</p>
+            </div>
+            <button (click)="openRating(order)" class="flex-shrink-0 bg-white text-yellow-600 font-extrabold text-xs px-3 py-2 rounded-xl hover:bg-yellow-50 transition">
+              Evaluer
+            </button>
+          </div>
+
+          <!-- ── ORDER CARD ────────────────────── -->
+          <div (click)="viewOrderDetails(order)"
+               class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-gray-100 active:scale-[0.99]">
+
+            <!-- Color top bar -->
+            <div class="h-1 w-full"
+                 [ngClass]="{
+                   'bg-yellow-400': order.status === 'PENDING',
+                   'bg-orange-500': order.status === 'CONFIRMED',
+                   'bg-purple-500': order.status === 'PROCESSING',
+                   'bg-blue-500':   order.status === 'SHIPPED',
+                   'bg-green-500':  order.status === 'DELIVERED',
+                   'bg-red-400':    order.status === 'CANCELLED'
+                 }"></div>
+
+            <div class="p-4">
+              <!-- Header row -->
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-extrabold text-gray-900">#{{ order.id.substring(0,8).toUpperCase() }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border"
+                          [ngClass]="{
+                            'bg-yellow-50 text-yellow-700 border-yellow-200': order.status === 'PENDING',
+                            'bg-orange-50 text-orange-700 border-orange-200': order.status === 'CONFIRMED',
+                            'bg-purple-50 text-purple-700 border-purple-200': order.status === 'PROCESSING',
+                            'bg-blue-50   text-blue-700   border-blue-200':   order.status === 'SHIPPED',
+                            'bg-green-50  text-green-700  border-green-200':  order.status === 'DELIVERED',
+                            'bg-red-50    text-red-700    border-red-200':    order.status === 'CANCELLED'
+                          }">
+                      {{ getStatusInfo(order.status).icon }} {{ getStatusInfo(order.status).label }}
+                    </span>
+                    <span *ngIf="order.rating" class="text-[11px] text-amber-600 font-bold">⭐ {{ order.rating }}/5</span>
+                  </div>
+                  <p class="text-[11px] text-gray-400 mt-1">
+                    {{ formatDate(order.createdAt) }}
+                    <ng-container *ngIf="order.farmerName"> · 🌿 {{ order.farmerName }}</ng-container>
+                  </p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-base font-extrabold text-green-700">{{ order.totalAmount | number:'1.2-2' }} TND</p>
+                  <p class="text-[11px] text-gray-400">{{ order.items.length }} article(s)</p>
+                </div>
+              </div>
+
+              <!-- Mini stepper (compact, horizontal) -->
+              <div *ngIf="order.status !== 'CANCELLED'" class="flex items-center mb-3 gap-0">
+                <ng-container *ngFor="let s of ['PENDING','CONFIRMED','PROCESSING','SHIPPED','DELIVERED']; let i=index; let last=last">
+                  <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 transition-all"
+                       [ngClass]="getStepIndex(order.status) >= i ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'">
+                    {{ i === 0 ? '1' : i === 1 ? '2' : i === 2 ? '3' : i === 3 ? '4' : '5' }}
+                  </div>
+                  <div *ngIf="!last" class="flex-1 h-0.5 transition-all"
+                       [ngClass]="getStepIndex(order.status) > i ? 'bg-green-500' : 'bg-gray-100'"></div>
+                </ng-container>
+              </div>
+              <div *ngIf="order.status === 'CANCELLED'" class="text-xs text-red-500 bg-red-50 rounded-lg px-2.5 py-1.5 mb-3 border border-red-100">
+                ❌ Commande annulee
+              </div>
+
+              <!-- Products chips -->
+              <div class="flex gap-1 flex-wrap">
+                <span *ngFor="let item of order.items"
+                      class="text-[11px] bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg text-gray-700">
+                  <span class="font-bold text-green-700">{{ item.quantity }}×</span> {{ item.productName }}
+                </span>
+              </div>
+
+              <!-- Departure strip if shipped -->
+              <div *ngIf="order.status === 'SHIPPED' && order.departureLocation"
+                   class="mt-2.5 flex items-center gap-1.5 text-[11px] text-blue-700 bg-blue-50 rounded-lg px-2.5 py-1.5 border border-blue-100">
+                🚛 En route depuis <strong>{{ order.departureLocation }}</strong>
+                <ng-container *ngIf="order.transporterName"> · {{ order.transporterName }}</ng-container>
+              </div>
+
+              <!-- CONFIRMED call to action -->
+              <div *ngIf="order.status === 'CONFIRMED'"
+                   class="mt-2.5 flex items-center gap-1.5 text-[11px] text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5 border border-orange-200 font-semibold">
+                💳 Paiement requis pour continuer
+              </div>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <!-- Empty filter state -->
+        <div *ngIf="filteredOrders.length === 0" class="bg-white rounded-2xl shadow-sm p-10 text-center border border-gray-100">
+          <p class="text-gray-400 text-sm">Aucune commande ici</p>
+        </div>
+
+      </div>
+    </ng-container>
+
+  </div><!-- end container -->
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ORDER DETAILS BOTTOM SHEET
+══════════════════════════════════════════════ -->
+<div *ngIf="selectedOrder"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+     style="background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);"
+     (click)="closeDetails()">
+  <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col"
+       (click)="$event.stopPropagation()">
+
+    <!-- Handle -->
+    <div class="flex justify-center pt-3 pb-1 sm:hidden">
+      <div class="w-10 h-1.5 bg-gray-200 rounded-full"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="sticky top-0 bg-white px-5 py-4 border-b border-gray-100 flex items-start justify-between z-10">
+      <div>
+        <p class="text-xs text-gray-400 font-medium">Commande</p>
+        <h2 class="text-lg font-extrabold text-gray-900">#{{ selectedOrder.id.substring(0,8).toUpperCase() }}</h2>
+        <p class="text-xs text-gray-400">{{ formatDate(selectedOrder.createdAt) }} a {{ formatTime(selectedOrder.createdAt) }}</p>
+      </div>
+      <div class="flex items-center gap-2 mt-1">
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border"
+              [ngClass]="{
+                'bg-yellow-50 text-yellow-700 border-yellow-200': selectedOrder.status === 'PENDING',
+                'bg-orange-50 text-orange-700 border-orange-200': selectedOrder.status === 'CONFIRMED',
+                'bg-purple-50 text-purple-700 border-purple-200': selectedOrder.status === 'PROCESSING',
+                'bg-blue-50   text-blue-700   border-blue-200':   selectedOrder.status === 'SHIPPED',
+                'bg-green-50  text-green-700  border-green-200':  selectedOrder.status === 'DELIVERED',
+                'bg-red-50    text-red-700    border-red-200':    selectedOrder.status === 'CANCELLED'
+              }">
+          {{ getStatusInfo(selectedOrder.status).icon }} {{ getStatusInfo(selectedOrder.status).label }}
+        </span>
+        <button (click)="closeDetails()" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 text-lg font-bold transition">×</button>
+      </div>
+    </div>
+
+    <div class="p-5 space-y-4 flex-1">
+
+      <!-- ── STEPPER ────────────────────────── -->
+      <div *ngIf="selectedOrder.status !== 'CANCELLED'" class="bg-green-50 rounded-2xl px-4 pt-4 pb-5">
+        <p class="text-[11px] font-extrabold text-green-800 uppercase tracking-widest mb-4">Suivi de commande</p>
+        <div class="flex items-start">
+          <ng-container *ngFor="let step of [
+            {icon:'🕐', label:'Passee',      desc:'En attente'},
+            {icon:'✅', label:'Acceptee',    desc:'Par l agriculteur'},
+            {icon:'💳', label:'Paiement',    desc:'Finalise'},
+            {icon:'🚛', label:'Expediee',    desc:'En route'},
+            {icon:'🎉', label:'Livree',      desc:'Receptionee'}
+          ]; let i = index; let last = last">
+            <div class="flex flex-col items-center text-center" style="flex:0 0 auto;min-width:52px;">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-base ring-2 transition-all"
+                   [ngClass]="getStepIndex(selectedOrder.status) >= i
+                     ? 'bg-green-600 text-white ring-green-300 shadow'
+                     : 'bg-white text-gray-300 ring-gray-200'">
+                {{ step.icon }}
+              </div>
+              <p class="text-[10px] font-bold mt-1 leading-tight"
+                 [ngClass]="getStepIndex(selectedOrder.status) >= i ? 'text-green-800' : 'text-gray-300'">
+                {{ step.label }}
+              </p>
+            </div>
+            <div *ngIf="!last"
+                 class="flex-1 h-0.5 mt-4 transition-all"
+                 [ngClass]="getStepIndex(selectedOrder.status) > i ? 'bg-green-500' : 'bg-gray-200'">
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Cancelled -->
+      <div *ngIf="selectedOrder.status === 'CANCELLED'" class="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+        <span class="text-2xl">❌</span>
+        <div>
+          <p class="font-bold text-red-800 text-sm">Commande annulee</p>
+          <p class="text-xs text-red-500 mt-0.5">Cette commande a ete annulee par l'agriculteur.</p>
+          <button (click)="reorder(selectedOrder); closeDetails()" class="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition">🔄 Recommander</button>
+        </div>
+      </div>
+
+      <!-- CONFIRMED — Pay Now block -->
+      <div *ngIf="selectedOrder.status === 'CONFIRMED'" class="bg-orange-50 border-2 border-orange-300 rounded-2xl p-4">
+        <div class="flex items-start gap-3 mb-3">
+          <span class="text-2xl">💳</span>
+          <div>
+            <p class="font-extrabold text-orange-800 text-sm">Votre commande a ete acceptee !</p>
+            <p class="text-xs text-orange-600 mt-0.5">L'agriculteur a accepte votre commande. Finalisez le paiement pour qu'il commence la preparation.</p>
+          </div>
+        </div>
+        <button (click)="openPayment(selectedOrder)"
+                class="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 transition shadow-sm">
+          💳 Proceder au paiement — {{ selectedOrder.totalAmount | number:'1.2-2' }} TND
+        </button>
+      </div>
+
+      <!-- SHIPPING INFO -->
+      <div *ngIf="selectedOrder.status === 'SHIPPED' || selectedOrder.departureLocation || selectedOrder.departureLat"
+           class="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+        <p class="font-bold text-blue-900 text-sm mb-3">🚛 Informations de livraison</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div *ngIf="selectedOrder.departureLocation" class="col-span-2">
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Depart</p>
+            <p class="font-semibold text-blue-900 text-sm">📍 {{ selectedOrder.departureLocation }}</p>
+          </div>
+          <div *ngIf="selectedOrder.departureDate">
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Date</p>
+            <p class="font-semibold text-blue-900 text-xs">🕒 {{ selectedOrder.departureDate | date:'dd/MM HH:mm' }}</p>
+          </div>
+          <div *ngIf="selectedOrder.transporterName">
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Transporteur</p>
+            <p class="font-semibold text-blue-900 text-xs">👤 {{ selectedOrder.transporterName }}</p>
+          </div>
+          <div *ngIf="!selectedOrder.departureDate" class="col-span-2 text-xs text-blue-400 italic">
+            L'agriculteur n'a pas encore renseigne la date de depart.
+          </div>
+        </div>
+      </div>
+
+      <!-- ARTICLES -->
+      <div>
+        <p class="font-bold text-gray-900 text-sm mb-3">🛒 Articles commandes</p>
+        <div class="rounded-2xl border border-gray-100 overflow-hidden">
+          <div *ngFor="let item of selectedOrder.items; let last=last"
+               class="flex items-center justify-between px-4 py-3 text-sm"
+               [ngClass]="!last ? 'border-b border-gray-100' : ''">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-sm flex-shrink-0">🌿</span>
+              <div class="min-w-0">
+                <p class="font-semibold text-gray-900 text-xs truncate">{{ item.productName }}</p>
+                <p class="text-[11px] text-gray-400">{{ item.price | number:'1.2-2' }} TND / {{ item.unit || 'unite' }}</p>
+              </div>
+            </div>
+            <div class="text-right ml-3 flex-shrink-0">
+              <p class="text-xs font-bold text-gray-700">{{ item.quantity }} × {{ item.price | number:'1.2-2' }}</p>
+              <p class="text-[11px] font-bold text-green-600">{{ (item.quantity * item.price) | number:'1.2-2' }} TND</p>
+            </div>
+          </div>
+          <div class="flex justify-between items-center px-4 py-3 bg-gray-50">
+            <span class="text-sm font-bold text-gray-700">Total</span>
+            <span class="text-base font-extrabold text-green-700">{{ selectedOrder.totalAmount | number:'1.2-2' }} TND</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DELIVERY ADDRESS -->
+      <div>
+        <p class="font-bold text-gray-900 text-sm mb-3">📍 Adresse de livraison</p>
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-1 text-sm">
+          <p *ngIf="selectedOrder.deliveryAddress?.fullName" class="font-semibold text-gray-900">{{ selectedOrder.deliveryAddress?.fullName }}</p>
+          <p *ngIf="selectedOrder.deliveryAddress?.phone" class="text-xs text-gray-500">📞 {{ selectedOrder.deliveryAddress?.phone }}</p>
+          <p class="text-gray-700 text-xs">{{ selectedOrder.deliveryAddress?.street || selectedOrder.deliveryAddress?.address }}</p>
+          <p class="text-gray-700 text-xs">{{ selectedOrder.deliveryAddress?.city }}
+            <span *ngIf="selectedOrder.deliveryAddress?.zipCode">{{ selectedOrder.deliveryAddress?.zipCode }}</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- LIVE TRACKING MAP -->
+      <div class="rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+          <p class="text-sm font-bold text-gray-900">🗺️ Suivi GPS</p>
+          <span *ngIf="selectedOrder.departureLat" class="flex items-center gap-1 text-[11px] text-green-600 font-semibold">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span>
+            Position partagee
+          </span>
+        </div>
+        <div class="p-4">
+          <!-- Map shown when geocoding done -->
+          <div *ngIf="destinationLat && destinationLng">
+            <app-map-view
+              [lat]="destinationLat"
+              [lng]="destinationLng"
+              [label]="selectedOrder.deliveryAddress?.city || 'Livraison'"
+              [driverLat]="driverLat || undefined"
+              [driverLng]="driverLng || undefined"
+              height="220px">
+            </app-map-view>
+            <div *ngIf="driverLat && driverLng" class="mt-2 flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+              <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block"></span>
+              <span class="text-xs text-green-700 font-medium">Position du transporteur en direct</span>
+              <button (click)="stopTracking()" class="ml-auto text-[11px] text-red-400 underline">Arreter</button>
+            </div>
+            <div *ngIf="trackingActive && !driverLat" class="mt-2 flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2">
+              <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse inline-block"></span>
+              <span class="text-xs text-yellow-700">En attente de la position...</span>
+            </div>
+          </div>
+
+          <div *ngIf="geocodingInProgress" class="flex items-center justify-center gap-2 py-6 text-gray-400 text-sm">
+            <div class="w-4 h-4 rounded-full border-2 border-green-500 border-t-transparent animate-spin"></div>
+            Chargement carte...
+          </div>
+
+          <div *ngIf="isTrackable(selectedOrder) && !trackingActive" class="mt-3">
+            <button (click)="startTracking(selectedOrder)" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition">
+              📍 Suivre ma livraison en direct
+            </button>
+          </div>
+          <div *ngIf="trackingActive && trackingOrderId === selectedOrder.id" class="mt-3">
+            <button (click)="stopTracking()" class="w-full py-2.5 border border-red-200 text-red-600 bg-red-50 rounded-xl text-sm font-medium transition hover:bg-red-100">
+              Arreter le suivi
+            </button>
+          </div>
+          <div *ngIf="!isTrackable(selectedOrder) && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CONFIRMED' && selectedOrder.status !== 'PENDING'" 
+               class="py-4 text-center text-xs text-gray-400">
+            Le suivi GPS sera disponible quand la commande est expediee.
+          </div>
+          <div *ngIf="selectedOrder.status === 'PENDING' || selectedOrder.status === 'CONFIRMED' || selectedOrder.status === 'PROCESSING'"
+               class="py-4 text-center text-xs text-gray-400">
+            Suivi disponible apres expedition par le transporteur.
+          </div>
+          <div *ngIf="selectedOrder.status === 'DELIVERED'" class="py-4 text-center text-xs text-green-600 font-semibold">
+            ✅ Commande livree avec succes
+          </div>
+        </div>
+      </div>
+
+      <!-- RATING DISPLAY -->
+      <div *ngIf="selectedOrder.rating" class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+        <p class="font-bold text-amber-800 text-sm mb-2">⭐ Votre evaluation</p>
+        <div class="flex items-center gap-0.5 text-amber-400 text-xl mb-2">
+          <span *ngFor="let i of [1,2,3,4,5]">{{ (selectedOrder.rating || 0) >= i ? '★' : '☆' }}</span>
+          <span class="text-xs text-amber-700 font-bold ml-2">{{ selectedOrder.rating }}/5</span>
+        </div>
+        <p *ngIf="selectedOrder.reviewText" class="text-xs text-gray-500 italic bg-white rounded-xl px-3 py-2 border border-amber-100">
+          "{{ selectedOrder.reviewText }}"
+        </p>
+      </div>
+
+      <!-- PAYMENT SUMMARY -->
+      <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+        <p class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-3">Recapitulatif</p>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between text-gray-500 text-xs">
+            <span>Sous-total</span>
+            <span>{{ getItemsSubtotal(selectedOrder) }} TND</span>
+          </div>
+          <div class="flex justify-between text-gray-500 text-xs">
+            <span>Livraison</span>
+            <span>{{ getDeliveryFee(selectedOrder) > 0 ? (getDeliveryFee(selectedOrder) | number:'1.2-2') + ' TND' : 'Gratuit' }}</span>
+          </div>
+          <div class="flex justify-between font-extrabold text-gray-900 pt-2 border-t border-gray-200">
+            <span>Total</span>
+            <span class="text-green-700">{{ selectedOrder.totalAmount | number:'1.2-2' }} TND</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end body -->
+
+    <!-- Sticky footer -->
+    <div class="sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4 space-y-2">
+      <button *ngIf="selectedOrder.status === 'CONFIRMED'"
+              (click)="openPayment(selectedOrder)"
+              class="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-extrabold text-sm transition shadow">
+        💳 Payer maintenant — {{ selectedOrder.totalAmount | number:'1.2-2' }} TND
+      </button>
+      <button *ngIf="selectedOrder.status === 'SHIPPED'"
+              (click)="confirmReceipt(selectedOrder)"
+              class="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-extrabold text-sm transition shadow">
+        ✅ J'ai bien recu ma commande
+      </button>
+      <button *ngIf="selectedOrder.status === 'DELIVERED' && !selectedOrder.rating"
+              (click)="openRating(selectedOrder)"
+              class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-extrabold text-sm transition shadow">
+        ⭐ Evaluer cette commande
+      </button>
+      <button (click)="closeDetails()" class="w-full py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+        Fermer
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAYMENT MODAL
+══════════════════════════════════════════════ -->
+<div *ngIf="showPaymentModal"
+     class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+     style="background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);"
+     (click)="closePayment()">
+  <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 pt-6 pb-5 text-white">
+      <div class="sm:hidden flex justify-center mb-3">
+        <div class="w-10 h-1.5 bg-white/30 rounded-full"></div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold">Finaliser le paiement</h2>
+          <p *ngIf="paymentOrder" class="text-sm text-white/70 mt-0.5">
+            Commande #{{ paymentOrder.id.substring(0,8).toUpperCase() }}
+          </p>
+        </div>
+        <div *ngIf="paymentOrder" class="text-right">
+          <p class="text-2xl font-extrabold">{{ paymentOrder.totalAmount | number:'1.2-2' }}</p>
+          <p class="text-xs text-white/70">TND</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-5">
+
+      <!-- Step 1: Method selection (when not on card form) -->
+      <ng-container *ngIf="selectedPaymentMethod !== 'carte'">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Choisissez votre mode de paiement</p>
+        <div class="space-y-2 mb-5">
+
+          <!-- Cash -->
+          <button (click)="selectedPaymentMethod = 'cash'"
+                  class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left"
+                  [ngClass]="selectedPaymentMethod === 'cash' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-gray-50 hover:border-gray-300'">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                 [ngClass]="selectedPaymentMethod === 'cash' ? 'bg-emerald-100' : 'bg-white border border-gray-200'">💵</div>
+            <div class="flex-1">
+              <p class="text-sm font-bold" [ngClass]="selectedPaymentMethod === 'cash' ? 'text-emerald-800' : 'text-gray-700'">Cash à la livraison</p>
+              <p class="text-xs text-gray-400 mt-0.5">Payez en espèces à la réception</p>
+            </div>
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                 [ngClass]="selectedPaymentMethod === 'cash' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'">
+              <span *ngIf="selectedPaymentMethod === 'cash'" class="text-white text-[10px] font-bold">✓</span>
+            </div>
+          </button>
+
+          <!-- Virement -->
+          <button (click)="selectedPaymentMethod = 'virement'"
+                  class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left"
+                  [ngClass]="selectedPaymentMethod === 'virement' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-gray-50 hover:border-gray-300'">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                 [ngClass]="selectedPaymentMethod === 'virement' ? 'bg-emerald-100' : 'bg-white border border-gray-200'">🏦</div>
+            <div class="flex-1">
+              <p class="text-sm font-bold" [ngClass]="selectedPaymentMethod === 'virement' ? 'text-emerald-800' : 'text-gray-700'">Virement bancaire</p>
+              <p class="text-xs text-gray-400 mt-0.5">Transfert depuis votre banque</p>
+            </div>
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                 [ngClass]="selectedPaymentMethod === 'virement' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'">
+              <span *ngIf="selectedPaymentMethod === 'virement'" class="text-white text-[10px] font-bold">✓</span>
+            </div>
+          </button>
+
+          <!-- Carte bancaire -->
+          <button (click)="selectedPaymentMethod = 'carte'"
+                  class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left"
+                  [ngClass]="selectedPaymentMethod === 'carte' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:border-gray-300'">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                 [ngClass]="selectedPaymentMethod === 'carte' ? 'bg-blue-100' : 'bg-white border border-gray-200'">💳</div>
+            <div class="flex-1">
+              <p class="text-sm font-bold text-blue-800">Carte bancaire</p>
+              <p class="text-xs text-gray-400 mt-0.5">Visa, Mastercard, e-DINAR</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-extrabold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">En ligne</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Summary -->
+        <div *ngIf="paymentOrder" class="bg-gray-50 rounded-2xl px-4 py-3 mb-4 flex items-center justify-between">
+          <span class="text-sm text-gray-500">Montant à payer</span>
+          <span class="font-extrabold text-emerald-700 text-lg">{{ paymentOrder.totalAmount | number:'1.2-2' }} TND</span>
+        </div>
+
+        <div class="flex gap-3">
+          <button (click)="processPayment()"
+                  [disabled]="paymentSubmitting"
+                  class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2">
+            <span *ngIf="!paymentSubmitting">✓ Confirmer le paiement</span>
+            <span *ngIf="paymentSubmitting" class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
+              Traitement...
+            </span>
+          </button>
+          <button (click)="closePayment()" class="px-5 py-3.5 border border-gray-200 text-gray-500 rounded-xl text-sm hover:bg-gray-50 transition">
+            Annuler
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Step 2: Card form -->
+      <ng-container *ngIf="selectedPaymentMethod === 'carte'">
+
+        <!-- Back button -->
+        <button (click)="selectedPaymentMethod = 'cash'" class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4 transition">
+          <span>←</span> Retour
+        </button>
+
+        <!-- Card visual preview -->
+        <div class="rounded-2xl p-4 mb-5 text-white relative overflow-hidden select-none"
+             style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 120px;">
+          <!-- Decorative circles -->
+          <div class="absolute -top-6 -right-6 w-28 h-28 rounded-full opacity-10 bg-white"></div>
+          <div class="absolute -bottom-4 -left-4 w-20 h-20 rounded-full opacity-10 bg-white"></div>
+          <!-- Chip -->
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-8 h-6 rounded bg-yellow-400/80 grid grid-cols-2 gap-px p-0.5">
+              <div class="bg-yellow-600/50 rounded-sm"></div><div class="bg-yellow-600/50 rounded-sm"></div>
+              <div class="bg-yellow-600/50 rounded-sm"></div><div class="bg-yellow-600/50 rounded-sm"></div>
+            </div>
+            <span class="text-xs font-bold tracking-wider opacity-70" *ngIf="cardType">{{ cardType }}</span>
+          </div>
+          <!-- Card number -->
+          <p class="font-mono text-sm tracking-[0.2em] mb-3 opacity-90">{{ cardNumberDisplay }}</p>
+          <!-- Name + Expiry -->
+          <div class="flex justify-between items-end">
+            <div>
+              <p class="text-[10px] opacity-50 uppercase">Titulaire</p>
+              <p class="text-xs font-bold uppercase tracking-wide">{{ cardNameDisplay }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] opacity-50 uppercase">Expire</p>
+              <p class="text-xs font-bold">{{ cardExpiryDisplay }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card inputs -->
+        <div class="space-y-3">
+          <!-- Card number -->
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Numéro de carte</label>
+            <input type="text" placeholder="1234 5678 9012 3456" maxlength="19"
+                   [value]="cardNumber"
+                   (input)="formatCardNumber($event)"
+                   class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-blue-400 focus:outline-none transition">
+          </div>
+          <!-- Cardholder name -->
+          <div>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Nom du titulaire</label>
+            <input type="text" placeholder="PRÉNOM NOM" [(ngModel)]="cardName"
+                   class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm uppercase focus:border-blue-400 focus:outline-none transition">
+          </div>
+          <!-- Expiry + CVV -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Expiration</label>
+              <input type="text" placeholder="MM/AA" maxlength="5"
+                     [value]="cardExpiry"
+                     (input)="formatExpiry($event)"
+                     class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-blue-400 focus:outline-none transition">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">CVV</label>
+              <input type="password" placeholder="•••" maxlength="4" [(ngModel)]="cardCvv"
+                     class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-blue-400 focus:outline-none transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- Security badge -->
+        <div class="flex items-center gap-2 mt-3 mb-4 text-xs text-gray-400">
+          <span>🔒</span>
+          <span>Paiement sécurisé — vos données sont chiffrées</span>
+        </div>
+
+        <!-- Amount + Pay button -->
+        <div *ngIf="paymentOrder" class="bg-blue-50 rounded-2xl px-4 py-3 mb-4 flex items-center justify-between">
+          <span class="text-sm text-blue-600 font-semibold">Total à payer</span>
+          <span class="font-extrabold text-blue-700 text-lg">{{ paymentOrder.totalAmount | number:'1.2-2' }} TND</span>
+        </div>
+
+        <div class="flex gap-3">
+          <button (click)="processPayment()"
+                  [disabled]="paymentSubmitting || !isCardValid()"
+                  class="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-sm transition disabled:opacity-40 flex items-center justify-center gap-2">
+            <span *ngIf="!paymentSubmitting">🔒 Payer {{ paymentOrder?.totalAmount | number:'1.2-2' }} TND</span>
+            <span *ngIf="paymentSubmitting" class="flex items-center gap-2">
+              <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
+              Traitement sécurisé...
+            </span>
+          </button>
+          <button (click)="closePayment()" [disabled]="paymentSubmitting" class="px-5 py-3.5 border border-gray-200 text-gray-500 rounded-xl text-sm hover:bg-gray-50 transition disabled:opacity-40">
+            ✕
+          </button>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     RATING MODAL
+══════════════════════════════════════════════ -->
+<div *ngIf="showRatingModal"
+     class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center"
+     style="background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);"
+     (click)="closeRating()">
+  <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-8"
+       (click)="$event.stopPropagation()">
+    <div class="sm:hidden flex justify-center mb-4">
+      <div class="w-10 h-1.5 bg-gray-200 rounded-full"></div>
+    </div>
+
+    <div class="text-center mb-5">
+      <div class="text-5xl mb-3">⭐</div>
+      <h2 class="text-xl font-extrabold text-gray-900">Evaluer la commande</h2>
+      <p class="text-xs text-gray-400 mt-1">Votre avis aide les autres acheteurs</p>
+    </div>
+
+    <!-- Stars -->
+    <div class="flex justify-center gap-3 mb-2">
+      <button *ngFor="let i of [1,2,3,4,5]"
+              (click)="setStarRating(i)"
+              class="text-5xl transition-all hover:scale-110 focus:outline-none leading-none"
+              [ngClass]="i <= selectedRating ? 'text-amber-400' : 'text-gray-200'">★</button>
+    </div>
+    <p class="text-center text-sm font-semibold mb-4"
+       [ngClass]="selectedRating === 0 ? 'text-gray-300' : 'text-amber-500'">
+      {{ selectedRating === 0 ? 'Selectionnez une note' :
+         selectedRating === 1 ? '😞 Tres insatisfait' :
+         selectedRating === 2 ? '😕 Insatisfait' :
+         selectedRating === 3 ? '😐 Correct' :
+         selectedRating === 4 ? '😊 Satisfait' : '😁 Excellent !' }}
+    </p>
+
+    <textarea [(ngModel)]="reviewInputText"
+              placeholder="Commentaire optionnel sur la qualite, fraicheur..."
+              rows="3"
+              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none mb-4 bg-gray-50">
+    </textarea>
+
+    <div class="flex gap-3">
+      <button (click)="submitRating()"
+              [disabled]="selectedRating === 0 || ratingSubmitting"
+              class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition disabled:opacity-40 flex items-center justify-center gap-2">
+        <span *ngIf="!ratingSubmitting">✓ Publier</span>
+        <span *ngIf="ratingSubmitting" class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+          Envoi...
+        </span>
+      </button>
+      <button (click)="closeRating()" class="px-5 py-3 border border-gray-200 text-gray-400 rounded-xl text-sm hover:bg-gray-50 transition">
+        Ignorer
+      </button>
+    </div>
+  </div>
+</div>

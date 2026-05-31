@@ -1,0 +1,182 @@
+version: '3.8'
+
+services:
+  registry:
+    image: registry:2
+    container_name: agri-registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    volumes:
+      - registry-data:/var/lib/registry
+
+  api-gateway:
+    build:
+      context: ./gateway/api-gateway
+    container_name: api-gateway
+    ports:
+      - "${API_GATEWAY_PORT:-8080}:8080"
+    environment:
+      - AUTH_SERVICE_URI=http://auth-service:8087
+      - CATALOG_SERVICE_URI=http://catalog-service:8080
+      - ORDER_SERVICE_URI=http://order-service:8080
+      - PAYMENT_SERVICE_URI=http://payment-service:8080
+      - MESSAGING_SERVICE_URI=http://messaging-service:8080
+      - DELIVERY_SERVICE_URI=http://delivery-service:8086
+      - JOBS_SERVICE_URI=http://jobs-service:8080
+      - USER_SERVICE_URI=http://user-service:8088
+    depends_on:
+      - auth-service
+      - user-service
+      - catalog-service
+
+  mongo:
+    image: mongo:7.0
+    container_name: agri-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+    container_name: catalog-service
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/agri_market}
+      - JWT_SECRET=${JWT_SECRET:-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2}
+    depends_on:
+      - mongo
+
+  user-service:
+    build:
+      context: ./services/user-service
+    container_name: agri-user-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongo:27017/agri_market}
+      - JWT_SECRET=${JWT_SECRET:-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2}
+    depends_on:
+      - mongo
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: agri-auth-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://mongo:27017/agri_market}
+      - JWT_SECRET=${JWT_SECRET:-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2}
+    depends_on:
+      - mongo
+
+  order-service:
+    build:
+      context: ./services/order-service
+    container_name: order-service
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/agri_market}
+    depends_on:
+      - mongo
+
+  messaging-service:
+    build:
+      context: ./services/messaging-service
+    container_name: messaging-service
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/agri_market}
+    depends_on:
+      - mongo
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+    container_name: payment-service
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/agri_market}
+    depends_on:
+      - mongo
+
+  jobs-service:
+    build:
+      context: ./services/jobs-service
+    container_name: jobs-service
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/agri_market}
+    depends_on:
+      - mongo
+
+
+  delivery-service:
+    build:
+      context: ./services/delivery-service
+    container_name: agri-delivery-service
+    ports:
+      - "8086:8086"
+    environment:
+      - MONGO_URI=${MONGO_URI:-mongodb://mongo:27017/agri_market}
+      - JWT_SECRET=${JWT_SECRET:-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2}
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: agri-frontend
+    ports:
+      - "4200:8080"
+    depends_on:
+      - api-gateway
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: agri-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api-gateway
+      - auth-service
+      - user-service
+      - catalog-service
+      - order-service
+      - payment-service
+      - messaging-service
+      - jobs-service
+      - delivery-service
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: agri-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  registry-data:
+  mongo-data:
+  prometheus-data:
+  grafana-data:

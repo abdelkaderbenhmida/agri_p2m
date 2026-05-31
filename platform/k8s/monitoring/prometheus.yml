@@ -1,0 +1,34 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - prometheus.monitoring.svc.cluster.local:9090
+
+  - job_name: kube-state-metrics
+    static_configs:
+      - targets:
+          - kube-state-metrics.monitoring.svc.cluster.local:8080
+
+  - job_name: app-pods
+    kubernetes_sd_configs:
+      - role: pod
+    metrics_path: /actuator/prometheus
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace]
+        regex: agri-(dev|prod)
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: (api-gateway|auth-service|user-service|catalog-service|order-service|payment-service|messaging-service|jobs-service|delivery-service)
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_container_port_number]
+        separator: ':'
+        target_label: __address__
+        replacement: $1:$2
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: job
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace

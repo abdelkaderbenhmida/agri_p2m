@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - catalog-deployment.yaml
+  - gateway-deployment.yaml
+  - jobs-service.yaml
+  - messaging-service.yaml
+  - order-service.yaml
+  - payment-service.yaml
+  - delivery-service.yaml
+  - auth-service.yaml
+  - user-service.yaml
+  - frontend-deployment.yaml
+  - network-policies.yaml
+  - monitoring-network-policy.yaml
+  - k8s-secrets.yaml

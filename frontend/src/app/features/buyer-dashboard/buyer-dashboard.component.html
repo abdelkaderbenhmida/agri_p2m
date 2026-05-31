@@ -1,0 +1,138 @@
+﻿<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <!-- Total Orders -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">ðŸ“¦</span>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalOrders }}</div>
+        <div class="text-sm text-gray-500">Commandes totales</div>
+      </div>
+
+      <!-- Pending Orders -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">â³</span>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.pendingOrders }}</div>
+        <div class="text-sm text-gray-500">En cours</div>
+      </div>
+
+      <!-- Completed Orders -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">âœ…</span>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.completedOrders }}</div>
+        <div class="text-sm text-gray-500">LivrÃ©es</div>
+      </div>
+
+      <!-- Total Spent -->
+      <div class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <span class="text-2xl">ðŸ’°</span>
+          </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalSpent | number:'1.2-2' }} TND</div>
+        <div class="text-sm text-gray-500">Total dÃ©pensÃ©</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+      <button routerLink="/marketplace" class="bg-gradient-to-r from-primary to-green-700 text-white rounded-xl p-6 hover:shadow-xl transition-all transform hover:-translate-y-1">
+        <div class="text-3xl mb-3">ðŸ›ï¸</div>
+        <div class="text-lg font-bold mb-1">Continuer mes achats</div>
+        <div class="text-sm text-green-100">DÃ©couvrir plus de produits</div>
+      </button>
+
+      <button routerLink="/orders" class="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-primary hover:shadow-lg transition-all">
+        <div class="text-3xl mb-3">ðŸ“‹</div>
+        <div class="text-lg font-bold text-gray-900 mb-1">Mes commandes</div>
+        <div class="text-sm text-gray-500">Voir toutes mes commandes</div>
+      </button>
+
+      <button routerLink="/profile" class="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-primary hover:shadow-lg transition-all">
+        <div class="text-3xl mb-3">ðŸ‘¤</div>
+        <div class="text-lg font-bold text-gray-900 mb-1">Mon profil</div>
+        <div class="text-sm text-gray-500">GÃ©rer mes informations</div>
+      </button>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">Commandes rÃ©centes</h2>
+          <p class="text-sm text-gray-500 mt-1">Vos derniÃ¨res commandes</p>
+        </div>
+        <button routerLink="/orders" class="text-sm text-primary hover:text-primary/80 font-medium">
+          Voir tout â†’
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="text-center py-12">
+          <div class="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div class="mt-4 text-gray-600">Chargement...</div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && recentOrders.length === 0" class="text-center py-16">
+          <div class="text-6xl mb-4">ðŸ›’</div>
+          <div class="text-lg font-semibold text-gray-900 mb-2">Aucune commande</div>
+          <div class="text-gray-500 mb-6">Vous n'avez pas encore passÃ© de commande</div>
+          <button routerLink="/marketplace" class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium">
+            <span>ðŸ›ï¸</span>
+            <span>Commencer mes achats</span>
+          </button>
+        </div>
+
+        <!-- Orders List -->
+        <div *ngIf="!loading && recentOrders.length > 0" class="space-y-4">
+          <div *ngFor="let order of recentOrders" 
+               class="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="text-sm text-gray-500 mb-1">Commande {{ order.orderNumber }}</div>
+                <div class="font-semibold text-gray-900">{{ order.items[0]?.farmerName || 'Agriculteur' }}</div>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ order.createdAt | date:'dd/MM/yyyy' }}
+                </div>
+              </div>
+              <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getStatusClass(order.status)">
+                {{ getStatusLabel(order.status) }}
+              </span>
+            </div>
+
+            <div class="space-y-2 mb-4">
+              <div *ngFor="let item of order.items" class="flex items-center justify-between text-sm">
+                <span class="text-gray-700">{{ item.productName }} Ã— {{ item.quantity }}</span>
+                <span class="font-medium text-gray-900">{{ item.price * item.quantity | number:'1.2-2' }} TND</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div class="text-lg font-bold text-gray-900">
+                Total: {{ order.totalAmount | number:'1.2-2' }} TND
+              </div>
+              <button class="text-sm text-primary hover:text-primary/80 font-medium">
+                Voir dÃ©tails â†’
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

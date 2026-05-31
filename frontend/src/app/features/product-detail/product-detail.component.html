@@ -1,0 +1,322 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <div class="inline-block w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-600">Chargement du produit...</p>
+    </div>
+  </div>
+
+  <!-- Product Detail -->
+  <div *ngIf="!loading && product" class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-600 mb-6">
+      <a routerLink="/" class="hover:text-green-600">Accueil</a>
+      <span>›</span>
+      <a routerLink="/marketplace" class="hover:text-green-600">Marketplace</a>
+      <span>›</span>
+      <span class="text-gray-900 font-medium">{{ product.name }}</span>
+    </nav>
+
+    <!-- Main Product Section -->
+    <div class="grid lg:grid-cols-2 gap-8 mb-12">
+      <!-- Image Gallery -->
+      <div class="space-y-4">
+        <!-- Main Image -->
+        <div class="bg-white rounded-2xl overflow-hidden shadow-lg">
+          <div class="relative aspect-square">
+            <img 
+              *ngIf="product.images && product.images.length > 0"
+              [src]="product.images[selectedImageIndex]" 
+              [alt]="product.name"
+              class="w-full h-full object-cover">
+            <div *ngIf="!product.images || product.images.length === 0" 
+                 class="w-full h-full flex items-center justify-center bg-gray-100 text-9xl">
+              🌾
+            </div>
+            <!-- Stock Badge -->
+            <div class="absolute top-4 right-4">
+              <span *ngIf="product.stock > 10" class="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-semibold shadow-lg">
+                En stock
+              </span>
+              <span *ngIf="product.stock > 0 && product.stock <= 10" class="px-4 py-2 bg-orange-500 text-white rounded-full text-sm font-semibold shadow-lg">
+                Stock limité
+              </span>
+              <span *ngIf="product.stock === 0" class="px-4 py-2 bg-red-500 text-white rounded-full text-sm font-semibold shadow-lg">
+                Rupture de stock
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thumbnail Gallery -->
+        <div *ngIf="product.images && product.images.length > 1" class="grid grid-cols-4 gap-3">
+          <button *ngFor="let image of product.images; let i = index"
+                  (click)="selectImage(i)"
+                  [class.ring-4]="selectedImageIndex === i"
+                  [class.ring-green-600]="selectedImageIndex === i"
+                  class="aspect-square rounded-lg overflow-hidden bg-white shadow hover:shadow-md transition-all">
+            <img [src]="image" [alt]="'Image ' + (i + 1)" class="w-full h-full object-cover">
+          </button>
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="space-y-6">
+        <!-- Category Badge -->
+        <div>
+          <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+            {{ product.category }}
+          </span>
+        </div>
+
+        <!-- Product Name -->
+        <h1 class="text-4xl font-bold text-gray-900">{{ product.name }}</h1>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1">
+            <span *ngFor="let star of getStars(product.rating || 0)" class="text-xl">{{ star }}</span>
+          </div>
+          <span class="text-gray-600">({{ product.rating || 0 }}/5)</span>
+          <span class="text-gray-400">•</span>
+          <span class="text-gray-600">{{ product?.reviews?.length || 0 }} avis</span>
+        </div>
+
+        <!-- Price -->
+        <div class="flex items-baseline gap-3">
+          <span class="text-5xl font-bold text-green-600">{{ product.price | number:'1.2-2' }} TND</span>
+          <span class="text-lg text-gray-500">/ {{ product.unit }}</span>
+        </div>
+
+        <!-- Description -->
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+          <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+        </div>
+
+        <!-- Quantity Selector -->
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">Quantité</h3>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center border-2 border-gray-300 rounded-lg">
+              <button (click)="decrementQuantity()" 
+                      [disabled]="quantity <= 1"
+                      class="px-4 py-3 text-xl font-bold hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                −
+              </button>
+              <span class="px-6 py-3 text-xl font-semibold min-w-[60px] text-center">{{ quantity }}</span>
+              <button (click)="incrementQuantity()" 
+                      [disabled]="quantity >= product.stock"
+                      class="px-4 py-3 text-xl font-bold hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                +
+              </button>
+            </div>
+            <span class="text-gray-600">{{ product.stock }} {{ product.unit }} disponible(s)</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-6">
+          <button (click)="addToCart()" 
+                  [disabled]="product.stock === 0"
+                  class="flex-1 px-8 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all">
+            <span class="text-2xl">🛒</span>
+            <span>Ajouter au panier</span>
+          </button>
+          <button (click)="buyNow()" 
+                  [disabled]="product.stock === 0"
+                  class="flex-1 px-8 py-4 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all">
+            <span class="text-2xl">⚡</span>
+            <span>Acheter maintenant</span>
+          </button>
+        </div>
+
+        <!-- Product Features -->
+        <div class="grid grid-cols-2 gap-4 pt-6 border-t border-gray-200">
+          <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+            <span class="text-2xl">🌱</span>
+            <div>
+              <div class="text-sm text-gray-600">Bio</div>
+              <div class="font-semibold text-gray-900">Certifié</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+            <span class="text-2xl">🚚</span>
+            <div>
+              <div class="text-sm text-gray-600">Livraison</div>
+              <div class="font-semibold text-gray-900">24-48h</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+            <span class="text-2xl">📍</span>
+            <div>
+              <div class="text-sm text-gray-600">Origine</div>
+              <div class="font-semibold text-gray-900">{{ product?.location || 'Non spécifié' }}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+            <span class="text-2xl">✓</span>
+            <div>
+              <div class="text-sm text-gray-600">Fraîcheur</div>
+              <div class="font-semibold text-gray-900">Garantie</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Farmer Information -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">À propos du producteur</h2>
+      <div class="flex flex-col md:flex-row gap-6 items-start" *ngIf="product?.farmer">
+        <div class="w-24 h-24 rounded-full overflow-hidden bg-green-600 flex-shrink-0 flex items-center justify-center text-white text-3xl font-bold">
+          {{ (product.farmer.firstName?.charAt(0) || 'F') + (product.farmer.lastName?.charAt(0) || '') }}
+        </div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-gray-900 mb-1">{{ product.farmer.farmerProfile?.farmName || 'Ferme' }}</h3>
+          <p class="text-gray-600 mb-2">{{ product.farmer.firstName }} {{ product.farmer.lastName }}</p>
+          <div class="flex items-center gap-4 mb-4">
+            <div class="flex items-center gap-1" *ngIf="product.farmer.farmerProfile?.rating">
+              <span class="text-xl">⭐</span>
+              <span class="font-semibold">{{ product.farmer.farmerProfile.rating }}</span>
+            </div>
+            <span class="text-gray-400" *ngIf="product.farmer.farmerProfile?.rating">•</span>
+            <span class="text-gray-600 flex items-center gap-1">
+              <span>📍</span>
+              {{ product.location || 'Tunisie' }}
+            </span>
+          </div>
+          <p class="text-gray-700 mb-4" *ngIf="product.farmer.farmerProfile?.description">{{ product.farmer.farmerProfile.description }}</p>
+          <div class="flex gap-3">
+            <button (click)="contactFarmer()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2">
+              <span>💬</span>
+              <span>Contacter</span>
+            </button>
+            <button class="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium">
+              Voir tous les produits
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Reviews -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Avis clients ({{ product?.reviews?.length || 0 }})</h2>
+      <div class="space-y-6" *ngIf="product?.reviews && product.reviews.length > 0">
+        <div *ngFor="let review of product.reviews" class="border-b border-gray-200 last:border-0 pb-6 last:pb-0">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg">
+              {{ review.customerName?.charAt(0) || 'C' }}
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-2">
+                <div>
+                  <h4 class="font-semibold text-gray-900">{{ review.customerName || 'Client' }}</h4>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span *ngFor="let star of getStars(review.rating)" class="text-lg">{{ star }}</span>
+                    <span class="text-sm text-gray-500">{{ review.createdAt | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-700">{{ review.comment }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!product?.reviews || product.reviews.length === 0" class="text-center py-8 text-gray-500">
+        Aucun avis pour le moment. Soyez le premier à donner votre avis !
+      </div>
+      <button (click)="openReviewForm()" class="w-full mt-6 px-4 py-3 border-2 border-gray-300 hover:border-green-600 text-gray-700 hover:text-green-600 rounded-lg font-medium transition-colors">
+        Écrire un avis
+      </button>
+    </div>
+
+    <!-- Review Form Modal -->
+    <div *ngIf="showReviewForm" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" (click)="closeReviewForm()">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-2xl font-bold text-gray-900">Écrire un avis</h3>
+          <button (click)="closeReviewForm()" class="text-gray-400 hover:text-gray-600">
+            <span class="text-2xl">×</span>
+          </button>
+        </div>
+        
+        <div class="space-y-6">
+          <!-- Rating -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Note</label>
+            <div class="flex gap-2">
+              <button *ngFor="let star of [1, 2, 3, 4, 5]" 
+                      (click)="selectRating(star)"
+                      class="text-3xl focus:outline-none hover:scale-110 transition-transform">
+                {{ star <= reviewForm.rating ? '⭐' : '☆' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Comment -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Votre avis</label>
+            <textarea [(ngModel)]="reviewForm.comment" 
+                      rows="4" 
+                      placeholder="Partagez votre expérience avec ce produit..."
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3">
+            <button (click)="closeReviewForm()" 
+                    class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">
+              Annuler
+            </button>
+            <button (click)="submitReview()" 
+                    [disabled]="submittingReview"
+                    class="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ submittingReview ? 'Envoi...' : 'Publier' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <div *ngIf="relatedProducts.length > 0">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Produits similaires</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div *ngFor="let relatedProduct of relatedProducts" 
+             class="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow cursor-pointer"
+             [routerLink]="['/product', relatedProduct.id]">
+          <div class="aspect-square bg-gray-100">
+            <img *ngIf="relatedProduct.images?.length" 
+                 [src]="relatedProduct.images[0]" 
+                 [alt]="relatedProduct.name"
+                 class="w-full h-full object-cover">
+            <div *ngIf="!relatedProduct.images?.length" 
+                 class="w-full h-full flex items-center justify-center text-6xl">🌾</div>
+          </div>
+          <div class="p-4">
+            <h3 class="font-bold text-gray-900 mb-2">{{ relatedProduct.name }}</h3>
+            <div class="flex items-center justify-between">
+              <span class="text-2xl font-bold text-green-600">{{ relatedProduct.price | number:'1.2-2' }} TND</span>
+              <span class="text-sm text-gray-500">/ {{ relatedProduct.unit }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not Found -->
+  <div *ngIf="!loading && !product" class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <div class="text-6xl mb-4">❌</div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Produit introuvable</h2>
+      <p class="text-gray-600 mb-6">Le produit que vous recherchez n'existe pas.</p>
+      <button routerLink="/marketplace" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
+        Retour au Marketplace
+      </button>
+    </div>
+  </div>
+</div>

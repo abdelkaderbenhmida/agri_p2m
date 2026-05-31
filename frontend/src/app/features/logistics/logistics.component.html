@@ -1,0 +1,318 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+
+    <!-- ===== LISTE DES TOURNÉES ===== -->
+    <ng-container *ngIf="currentView === 'list'">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Gestion Logistique</h1>
+          <p class="text-gray-600 mt-2">Gérez vos tournées et livraisons</p>
+        </div>
+        <button (click)="showCreate()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 flex items-center gap-2">
+          ➕ Nouvelle tournée
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Planifiées</p>
+          <p class="text-2xl font-bold text-blue-600 mt-1">{{ getCountByStatus(RouteStatus.PLANNED) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">En cours</p>
+          <p class="text-2xl font-bold text-yellow-600 mt-1">{{ getCountByStatus(RouteStatus.IN_PROGRESS) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Terminées</p>
+          <p class="text-2xl font-bold text-green-600 mt-1">{{ getCountByStatus(RouteStatus.COMPLETED) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Total</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ routes.length }}</p>
+        </div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="bg-white rounded-lg shadow p-4 mb-6 flex gap-2 flex-wrap">
+        <button (click)="filterByStatus(null)"
+                [class]="selectedStatus === null ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                class="px-4 py-2 rounded-lg transition text-sm font-medium">
+          Toutes
+        </button>
+        <button *ngFor="let st of statuses" (click)="filterByStatus(st)"
+                [class]="selectedStatus === st ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                class="px-4 py-2 rounded-lg transition text-sm font-medium">
+          {{ formatStatus(st) }}
+        </button>
+      </div>
+
+      <!-- Chargement -->
+      <div *ngIf="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <p class="mt-4 text-gray-600">Chargement...</p>
+      </div>
+
+      <!-- Liste -->
+      <div *ngIf="!loading && filteredRoutes.length > 0" class="space-y-4">
+        <div *ngFor="let route of filteredRoutes" class="bg-white rounded-lg shadow hover:shadow-lg transition p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                🚛 Tournée #{{ route.id?.substring(0, 8) | uppercase }}
+              </h3>
+              <div class="flex flex-wrap gap-4 text-sm text-gray-600 mt-1">
+                <span>👤 {{ route.driverName }}</span>
+                <span>🚗 {{ route.vehicleType }} – {{ route.vehicleNumber }}</span>
+                <span>📅 {{ formatDate(route.scheduledDate) }}</span>
+              </div>
+            </div>
+            <span [class]="getStatusBadgeClass(route.status)" class="px-3 py-1 rounded-full text-xs font-semibold">
+              {{ formatStatus(route.status) }}
+            </span>
+          </div>
+
+          <!-- Stats rapides -->
+          <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="text-center p-2 bg-gray-50 rounded">
+              <p class="text-xl font-bold text-gray-900">{{ route.stops?.length || 0 }}</p>
+              <p class="text-xs text-gray-500">Arrêts</p>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded">
+              <p class="text-xl font-bold text-gray-900">{{ route.totalOrders || 0 }}</p>
+              <p class="text-xs text-gray-500">Commandes</p>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded">
+              <p class="text-xl font-bold text-gray-900">{{ route.totalDistance || 0 }} km</p>
+              <p class="text-xs text-gray-500">Distance</p>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded">
+              <p class="text-xl font-bold text-green-600">{{ getDeliveredCount(route) }}</p>
+              <p class="text-xs text-gray-500">Livrées</p>
+            </div>
+          </div>
+
+          <!-- Barre de progression -->
+          <div class="mb-4" *ngIf="route.stops?.length">
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+              <span>Progression</span>
+              <span>{{ getProgressPercentage(route) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-green-600 h-2 rounded-full transition-all" [style.width.%]="getProgressPercentage(route)"></div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-2 pt-4 border-t">
+            <button *ngIf="route.status === 'PLANNED'" (click)="startRoute(route.id!)"
+                    class="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+              ▶ Démarrer
+            </button>
+            <button *ngIf="route.status === 'IN_PROGRESS'" (click)="completeRoute(route.id!)"
+                    class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+              ✓ Terminer
+            </button>
+            <button (click)="showView(route)" class="px-3 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50">
+              👁 Détails
+            </button>
+            <button (click)="showEdit(route)" class="px-3 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50">
+              ✏️ Modifier
+            </button>
+            <button (click)="deleteRoute(route.id!)" class="px-3 py-1.5 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50">
+              🗑 Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- État vide -->
+      <div *ngIf="!loading && filteredRoutes.length === 0" class="text-center py-16 bg-white rounded-lg shadow">
+        <div class="text-6xl mb-4">🚛</div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucune tournée</h3>
+        <p class="text-gray-600 mb-6">{{ selectedStatus ? 'Aucune tournée avec ce statut' : 'Créez votre première tournée de livraison' }}</p>
+        <button (click)="showCreate()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+          ➕ Créer une tournée
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ===== CRÉER / MODIFIER UNE TOURNÉE ===== -->
+    <ng-container *ngIf="currentView === 'create' || currentView === 'edit'">
+      <div class="flex items-center gap-3 mb-6">
+        <button (click)="backToList()" class="text-gray-500 hover:text-gray-700 font-medium">← Retour</button>
+        <h1 class="text-2xl font-bold text-gray-900">
+          {{ currentView === 'create' ? 'Nouvelle tournée' : 'Modifier la tournée' }}
+        </h1>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6 max-w-2xl">
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Nom du chauffeur *</label>
+            <input type="text" [(ngModel)]="form.driverName" name="driverName"
+                   placeholder="Ex: Mohamed Ben Ali"
+                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Type de véhicule *</label>
+              <select [(ngModel)]="form.vehicleType" name="vehicleType"
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                <option value="">Sélectionner...</option>
+                <option value="Camionnette">Camionnette</option>
+                <option value="Camion">Camion</option>
+                <option value="Fourgon">Fourgon</option>
+                <option value="Moto">Moto</option>
+                <option value="Voiture">Voiture</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Immatriculation *</label>
+              <input type="text" [(ngModel)]="form.vehicleNumber" name="vehicleNumber"
+                     placeholder="Ex: 123 TN 456"
+                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Date planifiée *</label>
+            <input type="datetime-local" [(ngModel)]="form.scheduledDate" name="scheduledDate"
+                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Distance estimée (km)</label>
+              <input type="number" [(ngModel)]="form.totalDistance" name="totalDistance"
+                     placeholder="0" min="0"
+                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre de commandes</label>
+              <input type="number" [(ngModel)]="form.totalOrders" name="totalOrders"
+                     placeholder="0" min="0"
+                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6 pt-5 border-t">
+          <button (click)="saveRoute()" [disabled]="saving"
+                  class="flex-1 bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium">
+            {{ saving ? 'Enregistrement...' : (currentView === 'create' ? 'Créer la tournée' : 'Enregistrer') }}
+          </button>
+          <button (click)="backToList()" class="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Annuler
+          </button>
+        </div>
+        <p *ngIf="formError" class="mt-3 text-sm text-red-600">{{ formError }}</p>
+      </div>
+    </ng-container>
+
+    <!-- ===== DÉTAILS D'UNE TOURNÉE ===== -->
+    <ng-container *ngIf="currentView === 'view' && selectedRoute">
+      <div class="flex items-center gap-3 mb-6">
+        <button (click)="backToList()" class="text-gray-500 hover:text-gray-700 font-medium">← Retour</button>
+        <h1 class="text-2xl font-bold text-gray-900">Détails de la tournée</h1>
+        <span [class]="getStatusBadgeClass(selectedRoute.status)" class="px-3 py-1 rounded-full text-xs font-semibold">
+          {{ formatStatus(selectedRoute.status) }}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Infos -->
+        <div class="lg:col-span-1 bg-white rounded-lg shadow p-6 space-y-4">
+          <h2 class="text-lg font-bold text-gray-900 border-b pb-2">Informations</h2>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide">Chauffeur</p>
+            <p class="font-semibold text-gray-900 mt-0.5">{{ selectedRoute.driverName }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide">Véhicule</p>
+            <p class="font-semibold text-gray-900 mt-0.5">{{ selectedRoute.vehicleType }} – {{ selectedRoute.vehicleNumber }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide">Date planifiée</p>
+            <p class="font-semibold text-gray-900 mt-0.5">{{ formatDate(selectedRoute.scheduledDate) }}</p>
+          </div>
+          <div *ngIf="selectedRoute.startedAt">
+            <p class="text-xs text-gray-500 uppercase tracking-wide">Démarrée le</p>
+            <p class="font-semibold text-gray-900 mt-0.5">{{ formatDate(selectedRoute.startedAt) }}</p>
+          </div>
+          <div *ngIf="selectedRoute.completedAt">
+            <p class="text-xs text-gray-500 uppercase tracking-wide">Terminée le</p>
+            <p class="font-semibold text-gray-900 mt-0.5">{{ formatDate(selectedRoute.completedAt) }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t">
+            <div class="text-center p-2 bg-gray-50 rounded">
+              <p class="text-lg font-bold text-gray-900">{{ selectedRoute.totalDistance || 0 }} km</p>
+              <p class="text-xs text-gray-500">Distance</p>
+            </div>
+            <div class="text-center p-2 bg-gray-50 rounded">
+              <p class="text-lg font-bold text-gray-900">{{ selectedRoute.totalOrders || 0 }}</p>
+              <p class="text-xs text-gray-500">Commandes</p>
+            </div>
+          </div>
+          <div class="space-y-2 pt-2">
+            <button *ngIf="selectedRoute.status === 'PLANNED'" (click)="startRoute(selectedRoute.id!)"
+                    class="w-full py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+              ▶ Démarrer la tournée
+            </button>
+            <button *ngIf="selectedRoute.status === 'IN_PROGRESS'" (click)="completeRoute(selectedRoute.id!)"
+                    class="w-full py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+              ✓ Marquer comme terminée
+            </button>
+            <button (click)="showEdit(selectedRoute)"
+                    class="w-full py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+              ✏️ Modifier
+            </button>
+          </div>
+        </div>
+
+        <!-- Arrêts -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-900">Arrêts de livraison</h2>
+            <span class="text-sm text-gray-500">{{ selectedRoute.stops?.length || 0 }} arrêt(s)</span>
+          </div>
+
+          <div class="mb-5" *ngIf="selectedRoute.stops?.length">
+            <div class="flex justify-between text-sm text-gray-600 mb-1">
+              <span>Progression globale</span>
+              <span class="font-semibold">{{ getProgressPercentage(selectedRoute) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div class="bg-green-600 h-3 rounded-full transition-all" [style.width.%]="getProgressPercentage(selectedRoute)"></div>
+            </div>
+          </div>
+
+          <div *ngIf="!selectedRoute.stops?.length" class="text-center py-8 text-gray-500">
+            Aucun arrêt défini pour cette tournée
+          </div>
+
+          <div *ngFor="let stop of selectedRoute.stops; let i = index"
+               class="flex items-start gap-4 py-4 border-b last:border-0">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                 [class]="getStopBadgeClass(stop.status)">
+              {{ i + 1 }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-900">{{ stop.customerName }}</p>
+              <p class="text-sm text-gray-500 mt-0.5">📍 {{ stop.address }}</p>
+              <p class="text-xs text-gray-400 mt-0.5" *ngIf="stop.estimatedArrival">
+                ETA: {{ formatDate(stop.estimatedArrival) }}
+              </p>
+              <p class="text-xs text-gray-500 mt-1" *ngIf="stop.notes">📝 {{ stop.notes }}</p>
+            </div>
+            <span [class]="getStopStatusBadgeClass(stop.status)" class="px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0">
+              {{ formatStopStatus(stop.status) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

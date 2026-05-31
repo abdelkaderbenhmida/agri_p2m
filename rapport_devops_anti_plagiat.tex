@@ -1,0 +1,435 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{setspace}
+\geometry{a4paper, margin=2cm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, fit, backgrounds, decorations.pathreplacing, calc, matrix, trees}
+\usepackage{adjustbox}
+\usepackage{fancyhdr}
+\usepackage{pdflscape}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{float}
+
+% Configuration des couleurs
+\definecolor{primarycolor}{RGB}{43, 110, 63} % Vert agricole
+\definecolor{secondarycolor}{RGB}{95, 158, 114}
+\definecolor{accentcolor}{RGB}{205, 149, 12}
+\definecolor{lightgray}{RGB}{240, 240, 240}
+\definecolor{dockerblue}{RGB}{36, 150, 237}
+\definecolor{k8sblue}{RGB}{50, 108, 229}
+\definecolor{jenkinsred}{RGB}{210, 73, 57}
+\definecolor{jwtcolor}{RGB}{142, 68, 173}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primarycolor,
+    filecolor=magenta,      
+    urlcolor=dockerblue,
+    pdftitle={Application Web en Microservices avec Approche DevOps},
+}
+
+% Configuration En-tête et Pied de page
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{primarycolor}{\textbf{Application Web en Microservices avec Approche DevOps}}}
+\fancyhead[R]{\leftmark}
+\begin{document}
+
+\begin{titlepage}
+    \thispagestyle{empty}
+    \begin{center}
+        % --- EN-TÊTE INSTITUTIONNEL ---
+        \begin{minipage}[t]{0.45\textwidth}
+            \begin{center}
+                \fbox{\begin{minipage}[c][2.5cm][c]{2.5cm}\centering Logo SUP'COM\end{minipage}}\\[0.2cm]
+                	extbf{\small République Tunisienne}\\[0.1cm]
+                	extbf{\scriptsize Ministère des Technologies de la Communication}\\[0.1cm]
+                	extbf{\tiny Ministère de l'Enseignement Supérieur et de la Recherche Scientifique}\\[0.2cm]
+                	extbf{\small Université de Carthage}\\[0.1cm]
+                {\small Ecole Supérieure des Communications de Tunis}\\[0.1cm]
+                	extbf{\large SUP'COM}
+            \end{center}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \begin{center}
+                \fbox{\begin{minipage}[c][2.5cm][c]{2.5cm}\centering Logo Université de Carthage\end{minipage}}\\[0.2cm]
+                	extbf{\small Université de Carthage}\\[0.1cm]
+                	extbf{\small جامعة قرطاج}
+            \end{center}
+        \end{minipage}
+        
+        \vfill
+        \vspace{1cm}
+        
+        % --- TYPE DE RAPPORT ---
+        \strut\hrule height 1.5pt
+        \vspace{0.4cm}
+        {\Large \textbf{Rapport de Projet de Préparation Métier \\ (P2M)}}
+        \vspace{0.4cm}
+        \hrule height 1.5pt
+        
+        \vfill
+        \vspace{1cm}
+        
+        % --- TITRE DU SUJET ---
+        {\large \textit{Intitulé du Sujet :}} \\[0.4cm]
+        {\Large \textbf{Application Web en Microservices avec Approche DevOps}}
+        
+        \vfill
+        \vspace{1.5cm}
+        
+        % --- AUTEURS ---
+        {\large \textbf{Projet réalisé par :}} \\[0.3cm]
+        {\large Bellili Hazem } \\
+        {\large {Ben Hmida Abdelkader}}
+        
+        \vfill
+        \vspace{0.8cm}
+        
+        % --- ENCADRANT ---
+        {\large \textbf{Encadré par :}} \\[0.3cm]
+        {\large M Harouni Zied}
+        
+        \vfill
+        \vspace{1.5cm}
+        
+        % --- ANNÉE UNIVERSITAIRE ---
+        {\large \textbf{Année universitaire :}} \\
+        {\large 2025-2026}
+        
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%---------------------------------------------------------
+\section{Présentation du Projet}
+%---------------------------------------------------------
+
+La plateforme \textbf{AgriConnect} se définit comme une solution de commerce en ligne de type \textit{cloud-native}, structurée de bout en bout autour d'un modèle en \textbf{Microservices}. À l'opposé des systèmes monolithiques traditionnels qui centralisent l'ensemble du code, cette architecture adopte une approche distribuée, indispensable pour affronter les exigences de montée en charge du web moderne.
+
+La finalité de cette application est d'établir un lien direct entre le monde agricole et les consommateurs. Afin de garantir une haute disponibilité face à un large volume de requêtes, de limiter la propagation des erreurs et d'optimiser les déploiements de nouvelles fonctionnalités, nous nous appuyons sur une infrastructure DevOps avancée, basée sur le paradigme de "conteneurisation à grande échelle".
+
+Ce document s'articule autour de deux axes fondamentaux : l'analyse de la dimension logicielle orientée microservices, suivie par l'étude de l'écosystème DevOps assurant l'orchestration et le déploiement continu.
+
+%---------------------------------------------------------
+\section{Le Noyau Logiciel : Philosophie Microservices}
+%---------------------------------------------------------
+
+\subsection{Fondements de l'Option Microservices}
+Opter pour les microservices représente une décision stratégique majeure. L'idée est de décomposer la plateforme en de multiples \textbf{composants autonomes et de taille réduite}, chacun étant dédié à un périmètre fonctionnel exclusif (par exemple, la gestion du panier ou l'affichage des produits).
+
+\textbf{Bénéfices appliqués à notre contexte :}
+\begin{itemize}
+    \item \textbf{Résilience face aux défaillances :} Un crash du module interne de discussion n'entraînera en aucun cas l'arrêt du processus d'achat ou la désactivation de la vitrine marchande.
+    \item \textbf{Élasticité ciblée (Scalabilité) :} Lors d'une forte affluence ponctuelle, il est tout à fait possible de multiplier les instances du \textit{Order Service} de manière isolée, optimisant ainsi l'utilisation de la puissance matérielle.
+    \item \textbf{Ségrégation des espaces de stockage :} En suivant la norme "Database-per-service", l'indépendance de chaque micro-application est consolidée grâce à un accès exclusif à sa proper sous-base MongoDB.
+\end{itemize}
+
+\subsection{Schéma d'Architecture Global des Microservices}
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        node distance=1.5cm,
+        ms/.style={rectangle, draw, rounded corners, align=center, thick, minimum width=2.8cm, minimum height=1.2cm, fill=primarycolor!10, draw=primarycolor, font=\footnotesize},
+        db/.style={rectangle, draw, rounded corners, thick, minimum height=1.5cm, minimum width=8cm, fill=accentcolor!20, draw=accentcolor, font=\normalsize},
+        gateway/.style={rectangle, draw, rounded corners, fill=purple!20, draw=purple, thick, align=center, minimum width=14cm, minimum height=1cm, font=\normalsize},
+        backendbox/.style={rectangle, draw, dashed, rounded corners, inner sep=0.5cm, draw=gray!80, fill=gray!5},
+        arrow/.style={->, >=stealth, thick, darkgray},
+        dashedarrow/.style={->, >=stealth, thick, dashed, darkgray}
+        ]
+        
+        % Frontend
+        \node[ms, fill=dockerblue!20, draw=dockerblue, minimum width=6cm] (front) at (0, 2.5) {Frontend (Angular 17) \\ \textit{- Navigateurs Utilisateurs -}};
+        
+        % Gateway
+        \node[gateway] (gateway) at (0, 0) {\textbf{API Gateway} (Port 8080) : Routage HTTP, Autorisations, Websocket};
+        
+        % Services Row 1
+        \node[ms] (auth) at (-5.4, -3) {Auth Service\\ \textit{(Authentification)}};
+        \node[ms] (user) at (-1.8, -3) {User Service\\ \textit{(Gestion Profils)}};
+        \node[ms] (catalog) at (1.8, -3) {Catalog Service\\ \textit{(Produits)}};
+        \node[ms] (order) at (5.4, -3) {Order Service\\ \textit{(Commandes)}};
+        
+        % Services Row 2
+        \node[ms] (payment) at (-5.4, -5) {Payment Service\\ \textit{(Konnect/Stripe)}};
+        \node[ms] (msg) at (-1.8, -5) {Messaging Service\\ \textit{(Chat direct)}};
+        \node[ms] (delivery) at (1.8, -5) {Delivery Service\\ \textit{(Tracking GPS)}};
+        \node[ms] (jobs) at (5.4, -5) {Jobs Service\\ \textit{(Offres d'emploi)}};
+        
+        % Backend Group Box
+        \begin{pgfonlayer}{background}
+            \node[backendbox, fit=(auth) (user) (catalog) (order) (payment) (msg) (delivery) (jobs)] (backend) {};
+        \end{pgfonlayer}
+        \node[below right, font=\footnotesize\bfseries, color=gray] at (backend.north west) {Réseau Kubernetes (Backend Microservices)};
+        
+        % Database (Remplacé cylinder par rectangle pour éviter les bugs géométriques LaTeX)
+        \node[db] (mongo) at (0, -8.5) {Cluster MongoDB (Bases de données logiques multiples)};
+        
+        % Connections
+        \draw[arrow] (front) -- (gateway);
+        
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (auth.north);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (user.north);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (catalog.north);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (order.north);
+        
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (-7.5, -1.5) |- (payment.west);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (-7.5, -1.5) |- (msg.west);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (7.5, -1.5)  |- (delivery.east);
+        \draw[arrow] (gateway.south) -- (0, -1.5) -| (7.5, -1.5)  |- (jobs.east);
+        
+        \draw[dashedarrow] (backend.south) -- node[right, font=\scriptsize, align=left] {Opérations isolées par collection\\(authdb, userdb, etc.)} (mongo.north);
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Architecture Globale du réseau de Microservices (\textbf{Core Projet})}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_swagger.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_swagger.png}
+    \caption{Capture du Swagger (Documentation de l'API) ou de la plateforme Angular}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Modèle de Communication (Chorégraphie Logique)}
+%---------------------------------------------------------
+
+Afin de prévenir tout couplage applicatif qui freinerait les mises à jour, nos huit applications internes s'interdisent de fusionner leurs données. Dès lors qu'un processus de vente touche à plusieurs entités (ex : commande puis paiement), ces applications dialoguent et s'avertissent par l'orchestration de requêtes HTTP dites synchrones.
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        lifeline/.style={thick, dashed, draw=gray},
+        actor/.style={rectangle, draw, rounded corners, fill=white, thick, minimum width=3cm, minimum height=1cm, align=center},
+        arrow/.style={->, >=stealth, thick},
+        return/.style={->, >=stealth, dashed, thick},
+        label/.style={above, font=\footnotesize, fill=white}
+        ]
+        
+        % Actors (Espacement X élargi à 6cm)
+        \node[actor] (client) at (0, 0) {Client API};
+        \node[actor, fill=orange!10] (order) at (6, 0) {Order Service};
+        \node[actor, fill=green!10] (payment) at (12, 0) {Payment Service};
+        \node[actor, fill=blue!10] (delivery) at (18, 0) {Delivery Service};
+        
+        % Lifelines
+        \draw[lifeline] (0, -0.5) -- (0, -8);
+        \draw[lifeline] (6, -0.5) -- (6, -8);
+        \draw[lifeline] (12, -0.5) -- (12, -8);
+        \draw[lifeline] (18, -0.5) -- (18, -8);
+        
+        % Messages (avec fill=white pour écraser les traits en pointillés)
+        \draw[arrow] (0, -1) -- node[label] {1. POST /api/orders} (6, -1);
+        \draw[arrow] (6, -2) -- node[label] {2. Notification inter-service: order-created} (12, -2);
+        \draw[return] (12, -3) -- node[label] {3. 200 OK (Payment initiated)} (6, -3);
+        
+        \draw[arrow] (0, -4.5) -- node[label] {4. Webhook : Paiement Konnect Confirmé} (12, -4.5);
+        
+        \draw[arrow] (12, -5.5) -- node[label] {5. Mise à jour statut (PAID)} (6, -5.5);
+        \draw[arrow] (12, -6.5) -- node[label] {6. POST /delivery/payment-confirmed} (18, -6.5);
+        
+        \node[draw, fill=secondarycolor!20, text width=3cm, align=center, font=\scriptsize, rounded corners] at (19.5,-6.5) {Création automatique \\ tournée logistique};
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Diagramme de Séquence des Communications Entrantes}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Principes de Sécurité et Identité (JWT \& SecOps)}
+%---------------------------------------------------------
+
+\subsection{L'Approche JWT au Cœur de l'Accès Services}
+Dans un but d'optimisation, afin d'alléger drastiquement notre API Gateway et de s'affranchir des nombreuses requêtes vers la base "users", le système exploite des JSON Web Tokens contenant des sceaux cryptographiques. Ce modèle garantit que chaque service autonome soit capable de lire le jeton et de contrôler sa signature en parfaite autonomie réseau.
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        node distance=0.8cm,
+        box/.style={rectangle, draw, rounded corners, align=center, thick, minimum width=3.5cm, minimum height=1.2cm},
+        arrow/.style={->, >=stealth, thick},
+        label/.style={font=\footnotesize, fill=white, align=center}
+        ]
+        
+        % Mise en page plane pour éviter les chevauchements
+        \node[box, fill=lightgray] (client) at (0, 0) {Client Apps};
+        \node[box, fill=purple!20] (gw) at (8, 0) {API Gateway};
+        \node[box, fill=primarycolor!20] (auth) at (16, 0) {Auth Service};
+        
+        \node[box, fill=secondarycolor!20] (order) at (8, -4.5) {Order Service};
+        
+        % Ligne 1 : Login
+        \draw[arrow] (client.north east) -- node[label, above] {1. POST /login} (gw.north west);
+        \draw[arrow] (gw.north east) -- node[label, above] {2. Route vers Auth} (auth.north west);
+        
+        % Ligne 2 : Retour JWT
+        \draw[arrow, dashed] (auth.south west) -- node[label, below] {3. Renvoi JWT : \{rôle, userId\}} (gw.south east);
+        \draw[arrow, dashed] (gw.south west) -- node[label, below] {4. Relais JWT au Client} (client.south east);
+        
+        % Ligne 3 : Requête authentifiée
+        \draw[arrow] (client.south) |- node[label, near start, left] {5. HTTP GET \\ Header: Bearer <JWT>} (0, -4.5) -- (order.west);
+        % Le proxy API relaye
+        \draw[arrow] (gw.south) -- node[label, right] {Relais invisible} (order.north);
+        
+        \node[draw, align=left, fill=jwtcolor!10, text width=4.5cm, font=\scriptsize, rounded corners] at (16,-4.5) {\textbf{Validation JWT Locale :}\\ - Certificat vérifié sur place \\ - Expiration validée \\ - Extractions des Rôles};
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Flux Authentifié et Approche Sécuritaire Zero-Trust}
+\end{figure}
+
+\subsection{Les Protections et Scans DevOps Intégrés}
+La chaîne logistique de lancement interdit le moindre compromis sur la qualité du code final. Une routine de balayages sécuritaires automatiques encadre le moindre apport de code :
+\begin{itemize}
+    \item \textbf{Trivy :} Exécute une fouille approfondie dans la structure des images Docker à la recherche de dépendances systèmes compromises ou connues pour être faillibles.
+    \item \textbf{Analyse SAST (SpotBugs) :} S'occupe d'ausculter le Bytecode du programme Java, relevant des anomalies algorithmiques qui ouvriraient la porte à des vulnérabilités critiques.
+\end{itemize}
+
+
+%---------------------------------------------------------
+\section{Intégration et Déploiement : L'Usine Logicielle}
+%---------------------------------------------------------
+
+Le pilotage de la construction pour cette immense galaxie de huit applications s'exerce de manière synchronisée par \textbf{Jenkins}. En s'appuyant sur des fichiers descriptifs Jenkinsfile, ce moteur orchestre une approche orientée **Multibranch**, permettant d'actionner les compilations de chaque branche et de tous les services de façon massive et concurrente pour gagner en rapidité.
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        stage/.style={rectangle, draw, rounded corners, fill=jenkinsred!20, draw=jenkinsred, thick, align=center, minimum width=3cm, minimum height=1.2cm, font=\footnotesize},
+        arrow/.style={->, >=stealth, thick, darkgray}
+        ]
+        
+        % Espacement X = 4.5cm pour respirer
+        \node[stage] (scm) at (0, 0) {Code SCM (Git)};
+        \node[stage, fill=dockerblue!20, draw=dockerblue] (build) at (4.5, 0) {Parallèle Build \\ (8 Services)};
+        \node[stage, fill=dockerblue!20, draw=dockerblue] (test) at (9, 0) {Tests Auto \\ (Surefire)};
+        \node[stage, fill=dockerblue!20, draw=dockerblue] (docker) at (13.5, 0) {Docker Build \\ Images};
+        
+        \node[stage, fill=orange!20, draw=orange] (sonar) at (13.5, -2.5) {Quality Gate \\ (Coverage)};
+        \node[stage, fill=orange!20, draw=orange] (trivy) at (9, -2.5) {Trivy Scan \\ (Containers)};
+        \node[stage, fill=orange!20, draw=orange] (sast) at (4.5, -2.5) {SpotBugs \\ SecOps Code};
+        
+        \node[stage, fill=k8sblue!20, draw=k8sblue] (push) at (0, -2.5) {Push Registry};
+        
+        \node[stage, fill=k8sblue!20, draw=k8sblue] (deploy) at (0, -5) {\textbf{Deploy Dev}};
+        \node[stage, fill=k8sblue!20, draw=k8sblue, dashed] (manual) at (6.75, -5) {Validation Manuelle};
+        \node[stage, fill=purple!20, draw=purple] (prod) at (13.5, -5) {\textbf{Deploy Prod}};
+        
+        % Connections
+        \draw[arrow] (scm) -- (build);
+        \draw[arrow] (build) -- (test);
+        \draw[arrow] (test) -- (docker);
+        
+        \draw[arrow] (docker) -- (sonar);
+        \draw[arrow] (sonar) -- (trivy);
+        \draw[arrow] (trivy) -- (sast);
+        \draw[arrow] (sast) -- (push);
+        
+        \draw[arrow] (push) -- (deploy);
+        \draw[arrow, dashed] (deploy) -- node[above, font=\footnotesize] {Avant Prod} (manual);
+        \draw[arrow, dashed] (manual) -- (prod);
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Enchaînement Systémique du Pipeline d'Intégration}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_jenkins.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_jenkins.png}
+    \caption{Capture de l'exécution du pipeline CI/CD sur Jenkins (Blue Ocean)}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{L'Hébergement en Cluster et Isolation (Kustomize)}
+%---------------------------------------------------------
+
+Le produit livré trouve son point d'ancrage ultime au sein d'une grappe **Kubernetes** extrêmement stable. Plutôt que de dupliquer inutilement notre arborescence de déploiement, nous utilisons `Kustomize` qui applique des patchs adaptatifs selon l'environnement de destination.
+
+Concrètement, les fondations figurent toutes dans `base/`. Par-dessus, la couche correspondant au répertoire `/dev/` initiera une seule machine pour de légers tests, tandis que la configuration ciblée `/prod/` fera émerger systématiquement des triplicatas pour assurer qu'aucune transaction ne soit perdue si une machine physique s'éteint.
+
+Afin de contrer d'éventuels vecteurs d'attaque intracluster, la plateforme Kubernetes force un trafic régi par du "Default Deny-All". Cette parade empêchera tout acteur néfaste qui prendrait d'assaut le code applicatif du *Order Service*, de naviguer librement et d'infiltrer la zone sécurisée du *Auth Service*.
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_kubernetes.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_kubernetes.png}
+    \caption{Capture d'écran du terminal (\texttt{kubectl get pods}) ou Dashboard Kubernetes}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Supervision et Maintien en Condition Opérationnelle}
+%---------------------------------------------------------
+
+\textbf{Le processus Push-Pull appliqué au Dashboard} \\
+Dans chaque pod Java gravite une dépendance nommée Actuator chargée d'annoter les battements de cœurs (temps mort, quantité de mémoire alouée). La moulinette Prometheus, tel un scraper, vient s'emparer ("Pull") de cette mine d'informations toutes les quinzaines de secondes. Ces extractions s'en retrouvent élégamment tracées via l'interface Grafana.
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tikzpicture}[
+        node distance=2.5cm,
+        comp/.style={circle, draw, align=center, thick, fill=white, minimum size=3cm},
+        target/.style={rectangle, draw, rounded corners, fill=k8sblue!20, thick, font=\footnotesize, minimum width=3.5cm, minimum height=1cm, align=center},
+        arrow/.style={->, >=stealth, thick},
+        label/.style={font=\scriptsize, fill=white, inner sep=2pt, align=center}
+        ]
+        
+        \node[comp, fill=accentcolor!20] (prom) at (0,0) {Prometheus \\ (Collecteur global)};
+        
+        % On recule considérablement les cibles à X=10cm (plus de chevauchement !)
+        \node[target] (svc1) at (9, 3) {Order-Service (Actuator)};
+        \node[target] (gw)  at (9, 0) {API-Gateway (Actuator)};
+        \node[target] (svc2) at (9, -3) {Auth-Service (Actuator)};
+        
+        \node[comp, fill=lightgray] (graf) at (-8, 0) {Grafana \\ Dashboards visuels};
+        
+        \draw[arrow] (prom) -- node[label, sloped] {Aspiration via /prometheus (15s)} (svc1);
+        \draw[arrow] (prom) -- node[label] {Aspiration via /prometheus (15s)} (gw);
+        \draw[arrow] (prom) -- node[label, sloped] {Aspiration via /prometheus (15s)} (svc2);
+        
+        \draw[arrow] (graf) -- node[label] {Consultation Périodique} (prom);
+        
+    \end{tikzpicture}
+    \end{adjustbox}
+    \caption{Visualisation du Système de Métriques Télémétriques}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % TODO: Remplacez "capture_grafana.png" par le nom exact de votre fichier d'image
+    \includegraphics[width=0.9\textwidth]{capture_grafana.png}
+    \caption{Dashboard Grafana montrant les métriques de performances et le suivi des microservices}
+\end{figure}
+
+
+%---------------------------------------------------------
+\section{Bilan de l'Infrastructure}
+%---------------------------------------------------------
+
+Pour donner un sens profond et réaliste à une conception Microservices distribuée comme celle de la plateforme AgriConnect, il est impératif d'asseoir le code sur des mécaniques DevOps de première classe. Une gestion simultanée d'un tel nombre de services exigerait des ressources humaines impossibles sans les apports colossaux de Jenkins, de Docker et de Kubernetes. L'alliance entre une architecture logicielle dissociée de base, d'un encapsulage systémique fiable, des validations sécuritaires pérennes (à l'image de SAST et SCA) et d'un monitoring actif confèrent au projet toutes les armes pour prospérer de façon autonome. Cette base technologique place AgriConnect dans un cadre robuste, extrêmement résilient aux imprévus, garantissant ainsi son ambition numérique sans aucune véritable limite physique ou logicielle.
+
+\end{document}

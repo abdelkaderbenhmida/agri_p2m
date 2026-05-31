@@ -1,0 +1,167 @@
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles - Agricultural Marketplace Design System */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+  }
+}
+
+:root {
+  /* Theme Colors - Agricultural Marketplace */
+  --background: #ffffff;
+  --foreground: #333333;
+  --primary: #2D7D3A;
+  --primary-foreground: #ffffff;
+  --secondary: #F58220;
+  --secondary-foreground: #ffffff;
+  --muted: #F5F5F5;
+  --muted-foreground: #717182;
+  --accent: #0077B6;
+  --accent-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --ring: #2D7D3A;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: #111827;
+  --foreground: #ffffff;
+  --primary: #34d399;
+  --primary-foreground: #111827;
+  --secondary: #fb923c;
+  --secondary-foreground: #111827;
+  --muted: #374151;
+  --muted-foreground: #9CA3AF;
+  --accent: #60a5fa;
+  --accent-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --ring: #34d399;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Better form autofill (removes yellow background in Chrome) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #f9fafb inset;
+  -webkit-text-fill-color: #111827;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Focus-visible ring — consistent across the app */
+:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+/* Slide-up animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out both;
+}
+
+/* Pulse ring (used on status badges) */
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+}
+.animate-pulse-ring {
+  animation: pulseRing 2s ease-in-out infinite;
+}
+
+/* Leaflet layering: keep map layers below app UI sections/modals */
+.leaflet-container {
+  z-index: 0;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: 10;
+}
+
+/* Utility classes used across redesigned pages */
+@layer components {
+  /* Consistent card style */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100;
+  }
+
+  /* Form label style */
+  .label {
+    @apply block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5;
+  }
+
+  /* Form input style */
+  .input {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50
+           focus:ring-2 focus:ring-green-500 focus:bg-white focus:border-green-300
+           transition text-sm;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply py-3 px-6 bg-gradient-to-r from-green-700 to-green-600 text-white
+           rounded-xl font-bold text-sm hover:shadow-lg hover:from-green-800 hover:to-green-700
+           transition-all disabled:opacity-50 flex items-center justify-center gap-2;
+  }
+
+  /* Secondary / outline button */
+  .btn-secondary {
+    @apply py-3 px-6 border-2 border-gray-200 rounded-xl font-semibold text-sm
+           text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all
+           flex items-center justify-center gap-2;
+  }
+}

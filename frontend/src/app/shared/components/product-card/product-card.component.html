@@ -1,0 +1,91 @@
+<div class="product-card group"
+     [class.compact]="compact"
+     (mouseenter)="isHovered = true"
+     (mouseleave)="isHovered = false">
+  
+  <a [routerLink]="['/product', product.id]" class="card-link">
+    <!-- Image Container -->
+    <div class="image-container">
+      <!-- Image -->
+      <img 
+        [src]="getImageUrl()" 
+        [alt]="product.name"
+        class="product-image"
+        loading="lazy"
+      />
+      
+      <!-- Hover Overlay -->
+      <div class="image-overlay" [class.visible]="isHovered">
+        <button 
+          class="quick-view-btn"
+          (click)="$event.preventDefault(); $event.stopPropagation();">
+          <span class="text-lg">👁️</span>
+          <span>Aperçu rapide</span>
+        </button>
+      </div>
+
+      <!-- Favorite Button -->
+      <button 
+        class="favorite-btn" 
+        [class.active]="isFavorite"
+        (click)="onToggleFavorite($event)">
+        <span *ngIf="!isFavorite" class="text-xl">🤍</span>
+        <span *ngIf="isFavorite" class="text-xl">❤️</span>
+      </button>
+
+      <!-- Badges -->
+      <div class="badges-container">
+        <span *ngIf="product.isOrganic" 
+              class="badge bg-green-100 text-green-800">
+          🌿 Bio
+        </span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="card-content">
+      <!-- Product Name -->
+      <h3 class="product-name">{{ product.name }}</h3>
+
+      <!-- Description -->
+      <p class="product-description" *ngIf="product.description && !compact">
+        {{ product.description }}
+      </p>
+
+      <!-- Rating -->
+      <div class="rating-container" *ngIf="product.rating">
+        <div class="stars">
+          <span *ngFor="let star of getRatingStars()" class="star">
+            {{ star ? '⭐' : '☆' }}
+          </span>
+        </div>
+        <span class="rating-text">{{ product.rating }}</span>
+        <span class="reviews-count" *ngIf="product.totalReviews">
+          ({{ product.totalReviews }})
+        </span>
+      </div>
+
+      <!-- Price & Actions -->
+      <div class="card-footer">
+        <div class="price-container">
+          <span class="price-current">{{ product.price | number:'1.2-2' }}€</span>
+          <span class="price-unit">/ {{ product.unit || 'kg' }}</span>
+        </div>
+
+        <button 
+          class="add-cart-btn"
+          [disabled]="!product.isAvailable || product.stock === 0"
+          (click)="onAddToCart($event)">
+          <span class="text-lg">🛒</span>
+          <span *ngIf="!compact">Ajouter</span>
+        </button>
+      </div>
+
+      <!-- Availability -->
+      <div class="availability" [ngClass]="getAvailabilityClass()">
+        <span class="availability-dot"></span>
+        <span class="availability-text">{{ getAvailabilityText() }}</span>
+      </div>
+    </div>
+  </a>
+</div>

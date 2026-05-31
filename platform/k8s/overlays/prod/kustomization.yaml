@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - path: gateway-env-patch.yaml
+  - path: frontend-api-upstream-patch.yaml
+
+namespace: agri-prod
+namePrefix: prod-
+
+replicas:
+  - name: api-gateway
+    count: 3
+  - name: catalog-service
+    count: 3
+
+images:
+  - name: DOCKER_REGISTRY/api-gateway
+    newName: localhost:5000/agri/api-gateway
+    newTag: stable
+  - name: DOCKER_REGISTRY/frontend
+    newName: localhost:5000/agri/frontend
+    newTag: stable
+  - name: DOCKER_REGISTRY/catalog-service
+    newName: localhost:5000/agri/catalog-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/auth-service
+    newName: localhost:5000/agri/auth-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/user-service
+    newName: localhost:5000/agri/user-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/order-service
+    newName: localhost:5000/agri/order-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/payment-service
+    newName: localhost:5000/agri/payment-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/delivery-service
+    newName: localhost:5000/agri/delivery-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/jobs-service
+    newName: localhost:5000/agri/jobs-service
+    newTag: stable
+  - name: DOCKER_REGISTRY/messaging-service
+    newName: localhost:5000/agri/messaging-service
+    newTag: stable

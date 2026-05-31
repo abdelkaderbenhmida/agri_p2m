@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  template:
+    spec:
+      containers:
+        - name: gateway
+          env:
+            - name: AUTH_SERVICE_URI
+              value: "http://prod-auth-service:8087"
+            - name: CATALOG_SERVICE_URI
+              value: "http://prod-catalog-service:8080"
+            - name: ORDER_SERVICE_URI
+              value: "http://prod-order-service:8080"
+            - name: PAYMENT_SERVICE_URI
+              value: "http://prod-payment-service:8080"
+            - name: MESSAGING_SERVICE_URI
+              value: "http://prod-messaging-service:8080"
+            - name: DELIVERY_SERVICE_URI
+              value: "http://prod-delivery-service:8086"
+            - name: JOBS_SERVICE_URI
+              value: "http://prod-jobs-service:8080"
+            - name: USER_SERVICE_URI
+              value: "http://prod-user-service:8088"

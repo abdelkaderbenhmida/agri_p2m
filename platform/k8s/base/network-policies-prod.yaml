@@ -1,0 +1,100 @@
+# Network Policies for agri-prod namespace
+# Applied with: kubectl apply -f network-policies-prod.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongodb-network-policy
+  namespace: agri-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: agri-mongodb
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: agri-auth-service
+    - podSelector:
+        matchLabels:
+          app: agri-catalog-service
+    - podSelector:
+        matchLabels:
+          app: agri-order-service
+    - podSelector:
+        matchLabels:
+          app: agri-payment-service
+    - podSelector:
+        matchLabels:
+          app: agri-user-service
+    - podSelector:
+        matchLabels:
+          app: agri-delivery-service
+    - podSelector:
+        matchLabels:
+          app: agri-messaging-service
+    - podSelector:
+        matchLabels:
+          app: agri-jobs-service
+    ports:
+    - port: 27017
+---
+# Gateway only accepts from frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-network-policy
+  namespace: agri-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - port: 8080
+---
+# Frontend only talks to gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-network-policy
+  namespace: agri-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+    ports:
+    - port: 8080
+      protocol: TCP
+  - to: []
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+---
+# Default deny all ingress/egress in agri-prod
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: agri-prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress

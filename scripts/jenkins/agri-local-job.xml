@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow-definition plugin="workflow-job">
+  <actions/>
+  <description>Local Jenkins pipeline for the Agri project.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[
+pipeline {
+  agent any
+
+  options {
+    timeout(time: 60, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    DOCKER_REGISTRY = 'host.docker.internal:5000'
+    APP_NAME        = 'agri'
+    IMAGE_TAG       = "${env.BUILD_NUMBER}-local"
+  }
+
+  stages {
+    stage('Prepare') {
+      steps {
+        script {
+          env.REPO_ROOT = '/home/gadour/Downloads/agrii/agri-main'
+        }
+      }
+    }
+
+    stage('Ensure Registry') {
+      steps {
+        script {
+          sh '''
+            set -e
+            cd /home/gadour/Downloads/agrii/agri-main
+              COMPOSE_CMD="docker compose"
+              if ! docker compose version >/dev/null 2>&1; then
+                if command -v docker-compose >/dev/null 2>&1; then
+                  COMPOSE_CMD="docker-compose"
+                else
+                  echo "No Docker Compose command found in Jenkins agent" >&2
+                  exit 1
+                fi
+              fi
+              $COMPOSE_CMD up -d registry
+            for _ in $(seq 1 30); do
+              if curl -fsS http://host.docker.internal:5000/v2/ >/dev/null 2>&1; then
+                exit 0
+              fi
+              sleep 1
+            done
+            echo "Registry did not become ready in time" >&2
+            exit 1
+          '''
+        }
+      }
+    }
+
+    stage('Build Microservices') {
+      parallel {
+        stage('Gateway') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f gateway/api-gateway/pom.xml clean package -DskipTests' }
+        }
+        stage('Catalog') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/catalog-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Jobs') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/jobs-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Messaging') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/messaging-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Order') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/order-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Payment') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/payment-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Delivery') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/delivery-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Auth') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/auth-service/pom.xml clean package -DskipTests' }
+        }
+        stage('User') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/user-service/pom.xml clean package -DskipTests' }
+        }
+        stage('Frontend') {
+          steps {
+            sh '''
+              docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main/frontend node:20-bookworm-slim bash -lc "npm install && npm run build"
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Test') {
+      parallel {
+        stage('Test Gateway') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f gateway/api-gateway/pom.xml test' }
+        }
+        stage('Test Catalog') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/catalog-service/pom.xml test' }
+        }
+        stage('Test Jobs') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/jobs-service/pom.xml test' }
+        }
+        stage('Test Messaging') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/messaging-service/pom.xml test' }
+        }
+        stage('Test Order') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/order-service/pom.xml test' }
+        }
+        stage('Test Payment') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/payment-service/pom.xml test' }
+        }
+        stage('Test Delivery') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/delivery-service/pom.xml test' }
+        }
+        stage('Test Auth') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/auth-service/pom.xml test' }
+        }
+        stage('Test User') {
+          steps { sh 'docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main maven:3.9.9-eclipse-temurin-17 mvn -f services/user-service/pom.xml test' }
+        }
+        stage('Test Frontend') {
+          steps {
+            sh '''
+              docker run --rm -v /home/gadour/Downloads/agrii/agri-main:/home/gadour/Downloads/agrii/agri-main -w /home/gadour/Downloads/agrii/agri-main/frontend node:20-bookworm-slim bash -lc 'if ! find src -type f -name "*.spec.ts" | grep -q .; then echo "[WARN] No frontend spec files found; skipping frontend unit tests."; else npm install && npm test -- --watch=false; fi'
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Docker Build & Push') {
+      steps {
+        script {
+          def repoRoot = '/home/gadour/Downloads/agrii/agri-main'
+          def images = [
+            ['api-gateway',       'gateway/api-gateway'],
+            ['catalog-service',   'services/catalog-service'],
+            ['jobs-service',      'services/jobs-service'],
+            ['messaging-service',  'services/messaging-service'],
+            ['order-service',     'services/order-service'],
+            ['payment-service',   'services/payment-service'],
+            ['delivery-service',  'services/delivery-service'],
+            ['auth-service',      'services/auth-service'],
+            ['user-service',      'services/user-service'],
+            ['frontend',          'frontend'],
+          ]
+
+          images.each { img ->
+            def name = img[0]
+            def context = img[1]
+            def fullTag = "${DOCKER_REGISTRY}/${APP_NAME}/${name}"
+            dir(repoRoot) {
+              sh "docker build -t ${fullTag}:${IMAGE_TAG} -t ${fullTag}:latest ${context}"
+              sh "docker push ${fullTag}:${IMAGE_TAG}"
+              sh "docker push ${fullTag}:latest"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'docker image prune -f || true'
+    }
+  }
+}
+    ]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

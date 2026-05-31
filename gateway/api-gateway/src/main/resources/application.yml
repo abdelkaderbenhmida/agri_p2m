@@ -1,0 +1,77 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URI:http://auth-service:8087}
+          predicates:
+            - Path=/api/auth/**
+        - id: catalog-service
+          uri: ${CATALOG_SERVICE_URI:http://catalog-service:8080}
+          predicates:
+            - Path=/api/products/**
+        - id: order-service
+          uri: ${ORDER_SERVICE_URI:http://order-service:8080}
+          predicates:
+            - Path=/api/orders/**
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URI:http://payment-service:8080}
+          predicates:
+            - Path=/api/payments/**
+        - id: messaging-service
+          uri: ${MESSAGING_SERVICE_URI:http://messaging-service:8080}
+          predicates:
+            - Path=/api/messages/**
+        - id: messaging-websockets
+          uri: ${MESSAGING_SERVICE_URI:http://messaging-service:8080}
+          predicates:
+            - Path=/ws/**
+        - id: delivery-service
+          uri: ${DELIVERY_SERVICE_URI:http://delivery-service:8086}
+          predicates:
+            - Path=/api/delivery/**
+        - id: jobs-service
+          uri: ${JOBS_SERVICE_URI:http://jobs-service:8080}
+          predicates:
+            - Path=/api/jobs/**
+        - id: user-service
+          uri: ${USER_SERVICE_URI:http://user-service:8088}
+          predicates:
+            - Path=/api/users/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.http.server.reactive: INFO
+    org.springframework.web.reactive: INFO
+    reactor.ipc.netty: INFO

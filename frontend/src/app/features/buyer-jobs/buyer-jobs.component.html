@@ -1,0 +1,241 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">💼 Offres d'emploi agricole</h1>
+        <p class="text-gray-500 mt-1">Trouvez un travail auprès des agriculteurs locaux</p>
+      </div>
+      <button *ngIf="currentUser" (click)="loadMyApplications()"
+              [class]="showMyApplications ? 'bg-green-600 text-white' : 'border border-green-600 text-green-700 hover:bg-green-50'"
+              class="px-5 py-2.5 rounded-lg font-medium transition">
+        📋 Mes candidatures
+      </button>
+    </div>
+
+    <!-- ===== MES CANDIDATURES ===== -->
+    <ng-container *ngIf="showMyApplications">
+      <div class="mb-6">
+        <button (click)="showMyApplications = false" class="text-gray-500 hover:text-gray-700 font-medium mb-4">← Retour aux offres</button>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Mes candidatures d'emploi</h2>
+
+        <div *ngIf="loadingMyApps" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+        </div>
+
+        <div *ngIf="!loadingMyApps && myApplications.length === 0" class="text-center py-12 bg-white rounded-xl shadow">
+          <p class="text-6xl mb-3">📭</p>
+          <p class="text-gray-600">Vous n'avez encore postulé à aucune offre.</p>
+        </div>
+
+        <div *ngFor="let item of myApplications" class="bg-white rounded-xl shadow p-5 mb-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-gray-900 text-lg">{{ item.job.title }}</h3>
+              <p class="text-sm text-gray-500 mt-0.5">{{ item.job.farmerName }} — {{ item.job.farmName }}</p>
+              <p class="text-xs text-gray-400 mt-1">Postulé le {{ formatDate(item.application.appliedAt) }}</p>
+            </div>
+            <span [class]="getAppStatusClass(item.application.status || '')"
+                  class="px-3 py-1 rounded-full text-xs font-semibold">
+              {{ formatAppStatus(item.application.status || '') }}
+            </span>
+          </div>
+          <p *ngIf="item.application.notes" class="mt-3 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
+            📝 Note de l'agriculteur: {{ item.application.notes }}
+          </p>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ===== LISTE DES OFFRES ===== -->
+    <ng-container *ngIf="!showMyApplications && !showDetail">
+      <!-- Search & Filters -->
+      <div class="bg-white rounded-xl shadow p-4 mb-6 flex flex-wrap gap-3">
+        <input type="text" [(ngModel)]="searchText" (ngModelChange)="applySearch()"
+               placeholder="🔍 Rechercher une offre, un agriculteur..."
+               class="flex-1 min-w-48 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+        <select [(ngModel)]="selectedJobType" (ngModelChange)="applySearch()"
+                class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500">
+          <option value="">Tous les types</option>
+          <option *ngFor="let t of jobTypes" [value]="t">{{ formatJobType(t) }}</option>
+        </select>
+        <button *ngIf="searchText || selectedJobType" (click)="searchText=''; selectedJobType=''; applySearch()"
+                class="px-4 py-2.5 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">✕ Réinitialiser</button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+        <p class="text-gray-500">Chargement des offres...</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!loading && filteredJobs.length === 0" class="text-center py-16 bg-white rounded-xl shadow">
+        <p class="text-5xl mb-4">🔍</p>
+        <p class="text-gray-600 font-medium">Aucune offre trouvée</p>
+        <p class="text-gray-400 text-sm mt-1">Essayez d'autres critères de recherche</p>
+      </div>
+
+      <!-- Jobs Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div *ngFor="let job of filteredJobs"
+             class="bg-white rounded-xl shadow hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-green-200 flex flex-col">
+          <div class="p-5 flex-1">
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-xs font-semibold px-2.5 py-1 bg-green-100 text-green-800 rounded-full">
+                {{ formatJobType(job.jobType) }}
+              </span>
+              <span class="text-xs text-gray-400">{{ formatDate(job.createdAt) }}</span>
+            </div>
+            <h3 class="font-bold text-gray-900 text-lg leading-snug mb-1">{{ job.title }}</h3>
+            <p class="text-sm text-green-700 font-medium mb-1">🌾 {{ job.farmerName || 'Agriculteur' }}
+              <span *ngIf="job.farmName"> — {{ job.farmName }}</span>
+            </p>
+            <p class="text-sm text-gray-500 mb-3">📍 {{ job.location || 'Tunisie' }}</p>
+            <p class="text-sm text-gray-600 line-clamp-2 mb-4">{{ job.description }}</p>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">{{ formatContractType(job.contractType) }}</span>
+              <span *ngIf="job.salaryMin || job.salaryMax" class="text-xs px-2 py-1 bg-amber-50 text-amber-700 rounded">
+                💰 {{ job.salaryMin || '?' }}–{{ job.salaryMax || '?' }} DT
+              </span>
+              <span *ngIf="job.positions" class="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded">
+                👥 {{ job.positions }} poste(s)
+              </span>
+            </div>
+          </div>
+
+          <div class="px-5 pb-4 flex gap-2 border-t pt-4">
+            <button (click)="openDetail(job)" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition">
+              Voir détails
+            </button>
+            <button (click)="openApply(job)" class="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition">
+              Postuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ===== DÉTAIL OFFRE ===== -->
+    <ng-container *ngIf="showDetail && selectedJob && !showMyApplications">
+      <div class="mb-4">
+        <button (click)="closeDetail()" class="text-gray-500 hover:text-gray-700 font-medium">← Retour aux offres</button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main info -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">{{ selectedJob.title }}</h2>
+              <p class="text-green-700 font-medium mt-1">🌾 {{ selectedJob.farmerName }}
+                <span *ngIf="selectedJob.farmName"> — {{ selectedJob.farmName }}</span>
+              </p>
+            </div>
+            <span class="text-xs font-semibold px-3 py-1.5 bg-green-100 text-green-800 rounded-full whitespace-nowrap">
+              {{ formatJobType(selectedJob.jobType) }}
+            </span>
+          </div>
+
+          <div class="flex flex-wrap gap-3 text-sm text-gray-600 mb-4">
+            <span>📍 {{ selectedJob.location }}</span>
+            <span>📋 {{ formatContractType(selectedJob.contractType) }}</span>
+            <span *ngIf="selectedJob.salaryMin || selectedJob.salaryMax">
+              💰 {{ selectedJob.salaryMin || '?' }}–{{ selectedJob.salaryMax || '?' }} DT/mois
+            </span>
+            <span *ngIf="selectedJob.applicationDeadline">⏰ Avant le {{ formatDate(selectedJob.applicationDeadline) }}</span>
+          </div>
+
+          <!-- Location map -->
+          <div *ngIf="selectedJob.locationLat && selectedJob.locationLng" class="mb-6">
+            <app-map-view [lat]="selectedJob.locationLat" [lng]="selectedJob.locationLng" [label]="selectedJob.location" height="200px"></app-map-view>
+          </div>
+
+          <h3 class="font-semibold text-gray-900 mb-2">Description du poste</h3>
+          <p class="text-gray-700 leading-relaxed mb-6">{{ selectedJob.description }}</p>
+
+          <div *ngIf="selectedJob.requirements?.length" class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Compétences requises</h3>
+            <ul class="space-y-1">
+              <li *ngFor="let r of selectedJob.requirements" class="flex items-start gap-2 text-sm text-gray-700">
+                <span class="text-green-600 mt-0.5">✓</span> {{ r }}
+              </li>
+            </ul>
+          </div>
+
+          <div *ngIf="selectedJob.benefits?.length" class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Avantages</h3>
+            <ul class="space-y-1">
+              <li *ngFor="let b of selectedJob.benefits" class="flex items-start gap-2 text-sm text-gray-700">
+                <span class="text-blue-500 mt-0.5">🎁</span> {{ b }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Apply sidebar -->
+        <div class="bg-white rounded-xl shadow p-6 h-fit">
+          <h3 class="font-semibold text-gray-900 mb-4">Postuler à cette offre</h3>
+          <div class="space-y-3 mb-5 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+              <span>👥</span> {{ selectedJob.positions || 1 }} poste(s) disponible(s)
+            </div>
+            <div *ngIf="selectedJob.applications?.length" class="flex items-center gap-2">
+              <span>📬</span> {{ selectedJob.applications?.length }} candidature(s)
+            </div>
+            <div *ngIf="selectedJob.applicationDeadline" class="flex items-center gap-2">
+              <span>📅</span> Limite: {{ formatDate(selectedJob.applicationDeadline) }}
+            </div>
+          </div>
+          <button (click)="openApply(selectedJob)" [disabled]="!currentUser"
+                  class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ currentUser ? '✉️ Envoyer ma candidature' : 'Connectez-vous pour postuler' }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+</div>
+
+<!-- ===== MODALE DE CANDIDATURE ===== -->
+<div *ngIf="showApplyModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" (click)="closeModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg" (click)="$event.stopPropagation()">
+    <div class="p-6 border-b flex justify-between items-center">
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">Postuler</h2>
+        <p class="text-sm text-gray-500 mt-0.5">{{ selectedJob?.title }}</p>
+      </div>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+    </div>
+
+    <div class="p-6">
+      <div *ngIf="applySuccess" class="mb-4 p-3 bg-green-50 text-green-800 rounded-lg text-sm">✅ {{ applySuccess }}</div>
+      <div *ngIf="applyError" class="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">⚠️ {{ applyError }}</div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Téléphone</label>
+          <input type="tel" [(ngModel)]="applicationForm.applicantPhone" placeholder="+216 XX XXX XXX"
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Lettre de motivation *</label>
+          <textarea [(ngModel)]="applicationForm.coverLetter" rows="5"
+                    placeholder="Expliquez pourquoi vous êtes le candidat idéal pour ce poste..."
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm resize-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button (click)="submitApplication()" [disabled]="applying"
+                class="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50">
+          {{ applying ? 'Envoi...' : 'Envoyer la candidature' }}
+        </button>
+        <button (click)="closeModal()" class="px-6 py-2.5 border rounded-lg hover:bg-gray-50">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>

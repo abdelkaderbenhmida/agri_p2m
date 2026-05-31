@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- OWASP Dependency-Check Suppressions for Agri Marketplace -->
+    <!-- Add known false positives or accepted risks here -->
+    <!--
+    <suppress>
+        <notes>Example: Suppress a false positive CVE</notes>
+        <packageUrl regex="true">^pkg:maven/org\.example/.*$</packageUrl>
+        <cve>CVE-2024-XXXX</cve>
+    </suppress>
+    -->
+</suppressions>

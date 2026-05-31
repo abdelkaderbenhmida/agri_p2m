@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - namespace.yaml
+  - hpa-gateway.yaml
+  - hpa-order.yaml
+  - hpa-payment.yaml
+
+patches:
+  - path: gateway-env-patch.yaml
+  - path: frontend-api-upstream-patch.yaml
+
+namespace: agri-dev
+namePrefix: dev-
+
+images:
+  - name: DOCKER_REGISTRY/api-gateway
+    newName: myregistry.local/agri/api-gateway
+    newTag: latest
+  - name: DOCKER_REGISTRY/frontend
+    newName: myregistry.local/agri/frontend
+    newTag: latest
+  - name: DOCKER_REGISTRY/catalog-service
+    newName: myregistry.local/agri/catalog-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/auth-service
+    newName: myregistry.local/agri/auth-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/user-service
+    newName: myregistry.local/agri/user-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/order-service
+    newName: myregistry.local/agri/order-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/payment-service
+    newName: myregistry.local/agri/payment-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/delivery-service
+    newName: myregistry.local/agri/delivery-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/jobs-service
+    newName: myregistry.local/agri/jobs-service
+    newTag: latest
+  - name: DOCKER_REGISTRY/messaging-service
+    newName: myregistry.local/agri/messaging-service
+    newTag: latest

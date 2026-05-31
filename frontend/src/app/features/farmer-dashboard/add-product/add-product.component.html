@@ -1,0 +1,155 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- Header -->
+    <div class="mb-6">
+      <button routerLink="/farmer-dashboard" class="flex items-center gap-2 text-gray-600 hover:text-green-600 mb-4">
+        <span class="text-lg">←</span>
+        <span>Retour au dashboard</span>
+      </button>
+      <h1 class="text-3xl font-bold text-gray-900">
+        {{ isEditMode ? 'Modifier le produit' : 'Ajouter un nouveau produit' }}
+      </h1>
+      <p class="text-gray-600 mt-2">{{ isEditMode ? 'Modifiez les informations de votre produit' : 'Remplissez les informations pour ajouter un produit à votre catalogue' }}</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="bg-white rounded-lg shadow p-12 text-center">
+      <div class="inline-block w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-600">Chargement...</p>
+    </div>
+
+    <!-- Form -->
+    <form *ngIf="!loading" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Basic Information -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <span>📝</span>
+          <span>Informations de base</span>
+        </h2>
+
+        <div class="space-y-4">
+          <!-- Product Name -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Nom du produit *
+            </label>
+            <input [(ngModel)]="product.name" name="name" type="text" required
+                   placeholder="ex: Tomates cerises"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Description *
+            </label>
+            <textarea [(ngModel)]="product.description" name="description" rows="4" required
+                      placeholder="Décrivez votre produit, son origine, ses qualités..."
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"></textarea>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Catégorie *
+            </label>
+            <select [(ngModel)]="product.category" name="category" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+              <option [ngValue]="undefined">Sélectionnez une catégorie</option>
+              <option *ngFor="let cat of categories" [value]="cat.value">
+                {{ cat.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Price & Unit -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Prix * (TND)
+              </label>
+              <input [(ngModel)]="product.price" name="price" type="number" step="0.01" min="0" required
+                     placeholder="0.00"
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Unité *
+              </label>
+              <select [(ngModel)]="product.unit" name="unit" required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option *ngFor="let unit of units" [value]="unit.value">
+                  {{ unit.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Stock -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Stock disponible *
+            </label>
+            <input [(ngModel)]="product.stock" name="stock" type="number" min="0" required
+                   placeholder="0"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <p class="mt-1 text-sm text-gray-500">Quantité disponible en {{ product.unit }}</p>
+          </div>
+
+          <!-- Location -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Localisation (wilaya / ville)
+            </label>
+            <select [(ngModel)]="product.location" name="location"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+              <option value="">Sélectionnez votre région</option>
+              <option *ngFor="let city of tunisianCities" [value]="city">{{ city }}</option>
+            </select>
+            <p class="mt-1 text-sm text-gray-500">Permet aux clients de trouver vos produits par distance</p>
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input [(ngModel)]="product.isOrganic" name="isOrganic" type="checkbox"
+                     class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+              <span class="text-sm font-medium text-gray-700">🌿 Produit biologique certifié</span>
+            </label>
+            
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input [(ngModel)]="product.isAvailable" name="isAvailable" type="checkbox"
+                     class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+              <span class="text-sm font-medium text-gray-700">✓ Produit disponible à la vente</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <span>📷</span>
+          <span>Images du produit</span>
+        </h2>
+
+        <app-image-upload [images]="imageUrls" (imagesChange)="onImagesChange($event)"></app-image-upload>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex gap-4">
+          <button type="button" (click)="cancel()"
+                  class="flex-1 px-6 py-3 border-2 border-gray-300 hover:border-red-500 text-gray-700 hover:text-red-600 rounded-lg font-medium transition-colors">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="loading"
+                  class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold flex items-center justify-center gap-2">
+            <span *ngIf="loading" class="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>{{ isEditMode ? '💾 Enregistrer les modifications' : '✓ Ajouter le produit' }}</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

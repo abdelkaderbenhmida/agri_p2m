@@ -1,0 +1,262 @@
+﻿<header *ngIf="!hideNavbar" class="sticky top-0 z-50 backdrop-blur-xl bg-gray-900/95 shadow-2xl transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <button routerLink="/" class="flex items-center gap-2.5 group cursor-pointer">
+        <div class="w-9 h-9 bg-gradient-to-br from-primary to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-primary/40 transition-shadow">
+          <span class="text-white text-xl">🌱</span>
+        </div>
+        <div class="hidden sm:block">
+          <div class="text-white font-bold tracking-tight leading-none">AgriConnect</div>
+          <div class="text-white/50 text-xs">🇹🇳 Tunisie</div>
+        </div> 
+      </button>
+
+      <!-- Desktop Nav -->
+      <nav *ngIf="currentUser" class="hidden md:flex items-center gap-1">
+        <ng-container *ngIf="currentUser.role === 'FARMER'">
+          <a routerLink="/farmer-dashboard" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">📊</span>
+            <span>Tableau de bord</span>
+          </a>
+          <a routerLink="/messages" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">💬</span>
+            <span>Messagerie</span>
+          </a>
+        </ng-container>
+        
+        <ng-container *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role">
+          <a routerLink="/marketplace" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">🏪</span>
+            <span>Marché</span>
+          </a>
+          <a routerLink="/orders" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">📋</span>
+            <span>Mes Commandes</span>
+          </a>
+          <a routerLink="/messages" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">💬</span>
+            <span>Messagerie</span>
+          </a>
+          <a routerLink="/offres-emploi" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">💼</span>
+            <span>Offres d'emploi</span>
+          </a>
+          <a routerLink="/offres-logistique" routerLinkActive="bg-white/15 text-white" [routerLinkActiveOptions]="{exact: false}"
+             class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all text-white/70 hover:text-white hover:bg-white/10">
+            <span class="text-lg">🚛</span>
+            <span>Livraisons</span>
+          </a>
+        </ng-container>
+      </nav>
+
+      <!-- Right Actions -->
+      <div class="flex items-center gap-2">
+        <!-- Notifications (if authenticated) -->
+        <button *ngIf="currentUser" class="relative p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+          <span class="text-xl">🔔</span>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full"></span>
+        </button>
+
+        <!-- Cart (customers only) -->
+        <button *ngIf="currentUser?.role === 'CUSTOMER'" routerLink="/cart"
+                class="relative p-2 rounded-xl transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">🛒</span>
+          <span *ngIf="cartItemsCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-secondary text-white text-xs rounded-full flex items-center justify-center font-bold">
+            {{cartItemsCount}}
+          </span>
+        </button>
+
+        <!-- User Dropdown or Auth Buttons -->
+        <ng-container *ngIf="currentUser">
+          <div class="relative" #userDropdown>
+            <button (click)="toggleDropdown()"  
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors group">
+              <!-- Avatar: photo or initials -->
+              <div class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-white text-sm shadow-lg"
+                   [ngClass]="currentUser.profileImage ? '' : (currentUser.role === 'FARMER' ? 'bg-gradient-to-br from-primary to-green-700' : 'bg-gradient-to-br from-secondary to-orange-600')">
+                <img *ngIf="currentUser.profileImage" [src]="currentUser.profileImage" class="w-full h-full object-cover">
+                <span *ngIf="!currentUser.profileImage">{{currentUser.firstName?.charAt(0) || 'U'}}{{currentUser.lastName?.charAt(0) || ''}}</span>
+              </div>
+              <div class="hidden md:block text-left">
+                <div class="text-sm leading-none text-white">{{currentUser.firstName || 'Utilisateur'}}</div>
+                <div class="text-xs text-white/60 mt-0.5">{{currentUser.role === 'FARMER' ? 'Agriculteur' : 'Client'}}</div>
+              </div>
+              <span class="text-white/70 transition-transform group-hover:rotate-180" [class.rotate-180]="dropdownOpen">▾</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div *ngIf="dropdownOpen" 
+                 class="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-slideDown">
+              <!-- Profile Header -->
+              <div class="p-4" [ngClass]="currentUser.role === 'FARMER' ? 'bg-gradient-to-br from-primary to-green-700' : 'bg-gradient-to-br from-secondary to-orange-600'">
+                <div class="flex items-center gap-3">
+                  <!-- Dropdown header avatar: photo or initials -->
+                  <div class="w-12 h-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg border border-white/30">
+                    <img *ngIf="currentUser.profileImage" [src]="currentUser.profileImage" class="w-full h-full object-cover">
+                    <span *ngIf="!currentUser.profileImage">{{currentUser.firstName?.charAt(0) || 'U'}}{{currentUser.lastName?.charAt(0) || ''}}</span>
+                  </div>
+                  <div>
+                    <div class="text-white font-semibold">{{currentUser.firstName}} {{currentUser.lastName}}</div>
+                    <div class="text-white/80 text-sm">{{currentUser.email}}</div>
+                    <div class="mt-1">
+                      <span class="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full border border-white/30">
+                        {{currentUser.role === 'FARMER' ? 'Agriculteur' : 'Client'}}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu Items -->
+              <div class="p-2">
+                <a routerLink="/profile" (click)="closeDropdown()"
+                   class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <span class="text-primary">👤</span>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-800">Mon Profil</div>
+                    <div class="text-xs text-gray-500">Voir et modifier mes infos</div>
+                  </div>
+                </a>
+
+                <a *ngIf="currentUser.role === 'FARMER'" routerLink="/farmer-dashboard" (click)="closeDropdown()"
+                   class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                    <span class="text-secondary">📊</span>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-800">Tableau de bord</div>
+                    <div class="text-xs text-gray-500">Gérer mon espace agriculteur</div>
+                  </div>
+                </a>
+
+                <a *ngIf="currentUser.role=== 'CUSTOMER'" routerLink="/orders" (click)="closeDropdown()"
+                   class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                    <span class="text-secondary">🛍️</span>
+                  </div>
+                  <div>
+                    <div class="text-sm text-gray-800">Mes Commandes</div>
+                    <div class="text-xs text-gray-500">Suivre mes achats</div>
+                  </div>
+                </a>
+
+                <div class="my-2 border-t border-gray-100"></div>
+
+                <button (click)="logout()"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors text-left group">
+                  <div class="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                    <span class="text-red-600">🚪</span>
+                  </div>
+                  <div>
+                    <div class="text-sm text-red-600">Se déconnecter</div>
+                    <div class="text-xs text-red-400">Quitter mon espace</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!currentUser">
+          <div class="hidden sm:flex items-center gap-2">
+            <button routerLink="/auth/login"
+                    class="px-4 py-2 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+              Connexion
+            </button>
+            <button routerLink="/auth/signup"
+                    class="px-4 py-2 rounded-xl text-sm bg-primary text-white hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25">
+              S'inscrire
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Mobile Menu Button -->
+        <button (click)="toggleMobileMenu()"
+                class="md:hidden p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+          <span *ngIf="!mobileMenuOpen" class="text-2xl">☰</span>
+          <span *ngIf="mobileMenuOpen" class="text-2xl">✕</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div *ngIf="mobileMenuOpen" 
+       class="md:hidden border-t border-white/10 bg-gray-900/98 backdrop-blur-xl overflow-hidden animate-slideDown">
+    <div class="px-4 py-4 space-y-1">
+      <ng-container *ngIf="currentUser">
+        <a *ngIf="currentUser.role === 'FARMER'" routerLink="/farmer-dashboard" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">📊</span>
+          <span>Tableau de bord</span>
+        </a>
+        <a *ngIf="currentUser.role === 'FARMER'" routerLink="/messages" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">💬</span>
+          <span>Messagerie</span>
+        </a>
+        <a *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role" routerLink="/marketplace" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">🏪</span>
+          <span>Marché</span>
+        </a>
+        <a *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role" routerLink="/messages" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">💬</span>
+          <span>Messagerie</span>
+        </a>
+        <a *ngIf="currentUser.role === 'CUSTOMER'" routerLink="/orders" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">📋</span>
+          <span>Mes Commandes</span>
+        </a>
+
+        <a *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role" routerLink="/offres-emploi" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">💼</span>
+          <span>Offres d'emploi</span>
+        </a>
+        <a *ngIf="currentUser.role === 'CUSTOMER' || !currentUser.role" routerLink="/offres-logistique" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors text-white/70 hover:text-white hover:bg-white/10">
+          <span class="text-xl">🚛</span>
+          <span>Livraisons</span>
+        </a>
+
+        <div class="pt-2 border-t border-white/10">
+          <a routerLink="/profile" (click)="closeMobileMenu()"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+            <span class="text-xl">👤</span>
+            <span>Mon Profil</span>
+          </a>
+          <button (click)="logout(); closeMobileMenu()"
+                  class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+            <span class="text-xl">🚪</span>
+            <span>Se déconnecter</span>
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="!currentUser">
+        <div class="pt-2 border-t border-white/10 space-y-2">
+          <button routerLink="/auth/login" (click)="closeMobileMenu()"
+                  class="w-full px-4 py-3 rounded-xl text-sm text-white border border-white/20 hover:bg-white/10 transition-colors">
+            Connexion
+          </button>
+          <button routerLink="/auth/signup" (click)="closeMobileMenu()"
+                  class="w-full px-4 py-3 rounded-xl text-sm bg-primary text-white hover:bg-primary/90 transition-colors">
+            S'inscrire
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</header>

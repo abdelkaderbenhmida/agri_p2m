@@ -1,0 +1,14 @@
+workflow-aggregator
+git
+blueocean
+credentials
+credentials-binding
+plain-credentials
+workflow-multibranch
+github-branch-source
+pipeline-stage-view
+pipeline-input-step
+job-dsl
+junit
+ssh-credentials
+configuration-as-code
