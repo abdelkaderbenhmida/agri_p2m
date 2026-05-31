@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🌾 AgriConnect — Marketplace Agricole
 
